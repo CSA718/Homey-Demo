@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { generateLotCheckReport, type LotCheckReport } from "../lib/lotCheck";
+import { computeBudgetFit, type BuildTier } from "../lib/budgetFit";
 import ReportView from "../components/ReportView";
 
 const SCAN_STEPS = [
@@ -18,8 +19,27 @@ export default function Report() {
   const [params] = useSearchParams();
   const address = params.get("address") ?? "";
   const town = params.get("town") ?? "";
+  const budgetParam = params.get("budget");
+  const sqftParam = params.get("sqft");
+  const tierParam = params.get("tier") as BuildTier | null;
 
   const [report, setReport] = useState<LotCheckReport | null>(null);
+
+  const budgetFit = useMemo(() => {
+    if (!report || !budgetParam || !sqftParam || !tierParam) return null;
+    const budget = Number(budgetParam);
+    const sqft = Number(sqftParam);
+    if (!Number.isFinite(budget) || !Number.isFinite(sqft) || budget <= 0 || sqft <= 0) {
+      return null;
+    }
+    return computeBudgetFit(
+      budget,
+      sqft,
+      tierParam,
+      report.costRangeLow,
+      report.costRangeHigh,
+    );
+  }, [report, budgetParam, sqftParam, tierParam]);
   const [scanned, setScanned] = useState(0);
   const tickRef = useRef<number | null>(null);
 
@@ -116,7 +136,7 @@ export default function Report() {
       </div>
 
       <div className="mt-6">
-        <ReportView report={report} />
+        <ReportView report={report} budgetFit={budgetFit} />
       </div>
 
       <div className="mt-10 flex flex-col gap-4 border-t border-line pt-8 sm:flex-row sm:items-center sm:justify-between print:hidden">

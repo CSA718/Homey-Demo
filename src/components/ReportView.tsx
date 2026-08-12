@@ -1,12 +1,20 @@
 import type { LotCheckReport } from "../lib/lotCheck";
+import type { BudgetFit } from "../lib/budgetFit";
 import StatusBadge from "./StatusBadge";
 import VerdictBadge from "./VerdictBadge";
+import BudgetFitCard from "./BudgetFitCard";
 
 function formatMoney(n: number) {
   return `$${n.toLocaleString("en-US")}`;
 }
 
-export default function ReportView({ report }: { report: LotCheckReport }) {
+export default function ReportView({
+  report,
+  budgetFit,
+}: {
+  report: LotCheckReport;
+  budgetFit?: BudgetFit | null;
+}) {
   const submitted = new Date(report.submittedAt);
   const flagCount = report.categories.filter((c) => c.status === "flag").length;
   const cautionCount = report.categories.filter(
@@ -73,6 +81,12 @@ export default function ReportView({ report }: { report: LotCheckReport }) {
             : "This report uses Homey's modeled public-data engine for all categories."}
         </p>
       </div>
+
+      {budgetFit && (
+        <div className="mt-8">
+          <BudgetFitCard fit={budgetFit} />
+        </div>
+      )}
 
       <div className="mt-8 space-y-4">
         {report.categories.map((cat) => (

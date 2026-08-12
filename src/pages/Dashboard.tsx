@@ -21,6 +21,16 @@ const STATUS_STYLE: Record<LeadStatus, string> = {
   lost: "bg-sand text-ink-soft",
 };
 
+const BUDGET_FIT_DOT: Record<Lead["budgetFit"]["status"], string> = {
+  comfortable: "bg-clear",
+  tight: "bg-caution",
+  short: "bg-flag",
+};
+
+function formatMoney(n: number) {
+  return `$${Math.round(n).toLocaleString("en-US")}`;
+}
+
 export default function Dashboard() {
   const { account, logOut } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -118,7 +128,15 @@ export default function Dashboard() {
                 <td className="px-5 py-4">
                   <VerdictBadge verdict={lead.report.verdict} label={lead.report.verdictLabel} />
                 </td>
-                <td className="px-5 py-4 text-ink-soft">{lead.budget}</td>
+                <td className="px-5 py-4">
+                  <span className="inline-flex items-center gap-1.5 text-ink-soft">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${BUDGET_FIT_DOT[lead.budgetFit.status]}`}
+                      title={lead.budgetFit.statusLabel}
+                    />
+                    {formatMoney(lead.budgetFit.budget)}
+                  </span>
+                </td>
                 <td className="px-5 py-4 text-ink-soft">
                   {new Date(lead.createdAt).toLocaleDateString("en-US", {
                     month: "short",

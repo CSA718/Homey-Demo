@@ -4,9 +4,13 @@ A demo of Homey: a lot-buildability screening service for Southeastern
 Massachusetts. Buyers get a **Lot Check** ($149, 48-hour turnaround) that
 screens a parcel against wetlands, nitrogen-sensitive/septic triggers, flood
 zone, soil drainage, zoning/setbacks, priority habitat, and wellhead
-protection. Builders get a flat-rate **membership** to route unqualified
-inquiries to Homey instead of burning estimator hours on them, plus a
-dashboard for managing the leads that come back.
+protection, and computes a **Budget Fit**: the buyer's stated budget compared
+against a realistic construction-cost estimate for their chosen size and
+build tier, plus this lot's own site-specific added costs, expressed as a
+likelihood the budget covers the build. Builders get a flat-rate
+**membership** to route unqualified inquiries to Homey instead of burning
+estimator hours on them, plus a dashboard for managing the leads that come
+back — each with the same budget-fit read the buyer saw.
 
 ## What's real vs. simulated
 
@@ -28,6 +32,12 @@ dashboard for managing the leads that come back.
   in `localStorage` — no server, no database. Data persists across reloads
   in the same browser but resets if storage is cleared.
   (`src/lib/auth.ts`, `src/lib/leads.ts`)
+- **Budget Fit is a real, deterministic calculation** — not looked up, but
+  not hardcoded either. It multiplies the buyer's desired square footage by
+  a per-tier construction-cost rate, adds the lot's own estimated
+  site-specific costs from the screening above, and compares that range
+  against the buyer's stated budget. It does not include land purchase
+  price. (`src/lib/budgetFit.ts`)
 
 ## Pages
 

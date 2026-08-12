@@ -25,6 +25,9 @@ export default function Checkout() {
   const address = params.get("address") ?? "";
   const town = params.get("town") ?? "";
   const lotCheckEmail = params.get("email") ?? "";
+  const budget = params.get("budget") ?? "";
+  const sqft = params.get("sqft") ?? "";
+  const buildTier = params.get("tier") ?? "";
 
   // Membership params
   const tier: MembershipTier = params.get("tier") === "standard" ? "standard" : "founding";
@@ -72,7 +75,13 @@ export default function Checkout() {
         navigate("/dashboard");
         return;
       }
-      const reportParams = new URLSearchParams({ address, town });
+      const reportParams = new URLSearchParams({
+        address,
+        town,
+        budget,
+        sqft,
+        tier: buildTier,
+      });
       navigate(`/report?${reportParams.toString()}`);
     }, 1600);
   }

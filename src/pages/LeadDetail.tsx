@@ -30,7 +30,7 @@ export default function LeadDetail() {
           Referred buyer
         </p>
         <h1 className="mt-1 font-serif text-2xl text-ink">{lead.buyerName}</h1>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
             <p className="text-xs uppercase tracking-wide text-ink-soft">Email</p>
             <p className="text-ink">{lead.email}</p>
@@ -39,15 +39,11 @@ export default function LeadDetail() {
             <p className="text-xs uppercase tracking-wide text-ink-soft">Phone</p>
             <p className="text-ink">{lead.phone}</p>
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-ink-soft">Stated budget</p>
-            <p className="text-ink">{lead.budget}</p>
-          </div>
         </div>
       </div>
 
       <div className="mt-6">
-        <ReportView report={lead.report} />
+        <ReportView report={lead.report} budgetFit={lead.budgetFit} />
       </div>
     </div>
   );

@@ -1,21 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SOUTHEASTERN_MA_TOWNS } from "../lib/lotCheck";
+import { BUILD_TIERS, type BuildTier } from "../lib/budgetFit";
 
 export default function LotCheck() {
   const navigate = useNavigate();
   const [address, setAddress] = useState("");
   const [town, setTown] = useState("");
   const [email, setEmail] = useState("");
+  const [budget, setBudget] = useState("");
+  const [sqft, setSqft] = useState("2400");
+  const [tier, setTier] = useState<BuildTier>("custom");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!address.trim() || !town) return;
+    if (!address.trim() || !town || !budget || !sqft) return;
     const params = new URLSearchParams({
       type: "lotcheck",
       address,
       town,
       email,
+      budget,
+      sqft,
+      tier,
     });
     navigate(`/checkout?${params.toString()}`);
   }
@@ -26,12 +33,14 @@ export default function LotCheck() {
         Lot Check · $149
       </span>
       <h1 className="mt-6 font-serif text-3xl text-ink sm:text-4xl">
-        Find out if a lot is buildable.
+        Find out if a lot is buildable — and if your budget covers it.
       </h1>
       <p className="mt-4 text-ink-soft">
-        Enter the parcel address and town. We'll geocode it, check it live
-        against FEMA's flood hazard data, and screen it against wetlands,
-        soil, zoning, priority habitat, and wellhead protection data.
+        Enter the parcel address and town, plus what you're planning to
+        spend. We'll geocode it, check it live against FEMA's flood hazard
+        data, screen it against wetlands, soil, zoning, priority habitat, and
+        wellhead protection data — and compare your budget against a
+        realistic estimated build cost for this lot.
       </p>
 
       <form
@@ -88,6 +97,71 @@ export default function LotCheck() {
             placeholder="you@example.com"
             className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
           />
+        </div>
+
+        <div className="border-t border-line pt-5">
+          <p className="text-sm font-semibold text-ink">Your budget</p>
+          <p className="mt-1 text-xs text-ink-soft">
+            Used to estimate whether your budget realistically covers this
+            build — not shared with anyone.
+          </p>
+
+          <div className="mt-4">
+            <label htmlFor="budget" className="block text-sm font-medium text-ink">
+              Target budget
+            </label>
+            <div className="relative mt-2">
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft">
+                $
+              </span>
+              <input
+                id="budget"
+                type="number"
+                required
+                min={0}
+                step={5000}
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                placeholder="650000"
+                className="w-full rounded-lg border border-line bg-paper py-2.5 pl-8 pr-4 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="sqft" className="block text-sm font-medium text-ink">
+                Desired size (sq ft)
+              </label>
+              <input
+                id="sqft"
+                type="number"
+                required
+                min={400}
+                step={100}
+                value={sqft}
+                onChange={(e) => setSqft(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              />
+            </div>
+            <div>
+              <label htmlFor="tier" className="block text-sm font-medium text-ink">
+                Build tier
+              </label>
+              <select
+                id="tier"
+                value={tier}
+                onChange={(e) => setTier(e.target.value as BuildTier)}
+                className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              >
+                {BUILD_TIERS.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label} (${t.rateLow}–{t.rateHigh}/sq ft)
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         <button
