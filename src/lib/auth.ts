@@ -7,6 +7,7 @@ export interface BuilderAccount {
   id: string;
   businessName: string;
   email: string;
+  state: string;
   createdAt: string;
 }
 
@@ -47,6 +48,7 @@ export function signUp(
   businessName: string,
   email: string,
   password: string,
+  state: string,
 ): { account: BuilderAccount } | { error: string } {
   const normalizedEmail = email.trim().toLowerCase();
   const accounts = readAccounts();
@@ -57,6 +59,7 @@ export function signUp(
     id: Math.random().toString(36).slice(2, 10),
     businessName: businessName.trim(),
     email: normalizedEmail,
+    state,
     createdAt: new Date().toISOString(),
     passwordHash: hashPassword(password),
   };
@@ -92,4 +95,10 @@ export function getSession(): BuilderAccount | null {
   if (!id) return null;
   const account = readAccounts().find((a) => a.id === id);
   return account ? toPublic(account) : null;
+}
+
+// Real member accounts signed up in this browser — used by the builder
+// directory to surface actual members alongside the seeded sample ones.
+export function getAllAccounts(): BuilderAccount[] {
+  return readAccounts().map(toPublic);
 }

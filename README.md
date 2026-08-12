@@ -8,10 +8,13 @@ and wellhead protection, and computes a **Budget Fit**: the buyer's stated
 budget compared against the lot's estimated land value, a realistic
 construction-cost estimate for their chosen size and build tier, and this
 lot's own site-specific added costs — expressed as a likelihood the budget
-covers the full cost to own the finished home. Builders get a flat **$499/mo
-membership** to route unqualified inquiries to Homey instead of burning
-estimator hours on them, plus a dashboard for managing the leads that come
-back — each with the same budget-fit read the buyer saw.
+covers the full cost to own the finished home. Right on that report, buyers
+can **connect with a member builder** serving their state — one click sends
+their contact info, report, and budget fit into that builder's real
+dashboard. Builders get a flat **$499/mo membership** to route their own
+unqualified inquiries to Homey *and* to be discoverable by buyers who found
+Homey first, plus a dashboard for managing the leads that come back either
+way.
 
 ## What's real vs. simulated
 
@@ -37,6 +40,18 @@ back — each with the same budget-fit read the buyer saw.
   in `localStorage` — no server, no database. Data persists across reloads
   in the same browser but resets if storage is cleared.
   (`src/lib/auth.ts`, `src/lib/leads.ts`)
+- **The builder marketplace is real accounts plus seed data, and connections
+  are real.** The "Connect with a Builder" step on the report page matches
+  against builders who actually signed up in this browser (via
+  `/checkout?type=membership`, which now collects a service-area state)
+  merged with ~10 seeded sample builders spread across common states, so the
+  list is never empty. Clicking Connect on a real account writes an actual
+  lead into that builder's dashboard via `addConnectionLead` — sign up as a
+  builder in a state, then run a Lot Check in that state in the same
+  browser, and you can watch your own new lead land in your dashboard.
+  Connecting with a seed/sample builder just shows a confirmation, since
+  there's no real account behind it to deliver to.
+  (`src/lib/builderDirectory.ts`, `src/components/ConnectWithBuilders.tsx`)
 - **Budget Fit is a real, deterministic calculation** — not looked up, but
   not hardcoded either. It sums a modeled land value (state + acreage-based
   per-acre rate), the buyer's desired square footage times a per-tier

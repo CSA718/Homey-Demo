@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { signUp } from "../lib/auth";
 import { useAuth } from "../context/AuthContext";
+import { US_STATES } from "../lib/lotCheck";
 
 const MEMBERSHIP_PRICE = 499;
 
@@ -33,6 +34,7 @@ export default function Checkout() {
   const buildTier = params.get("tier") ?? "";
 
   const [businessName, setBusinessName] = useState("");
+  const [serviceState, setServiceState] = useState("");
   const [email, setEmail] = useState(lotCheckEmail);
   const [password, setPassword] = useState("");
   const [cardName, setCardName] = useState("");
@@ -54,8 +56,8 @@ export default function Checkout() {
     setError(null);
 
     if (type === "membership") {
-      if (!businessName.trim() || !email.trim() || password.length < 4) {
-        setError("Fill in your business name, email, and a password (4+ characters).");
+      if (!businessName.trim() || !serviceState || !email.trim() || password.length < 4) {
+        setError("Fill in your business name, service area, email, and a password (4+ characters).");
         return;
       }
     }
@@ -64,7 +66,7 @@ export default function Checkout() {
 
     window.setTimeout(() => {
       if (type === "membership") {
-        const result = signUp(businessName, email, password);
+        const result = signUp(businessName, email, password, serviceState);
         if ("error" in result) {
           setStatus("form");
           setError(result.error);
@@ -78,6 +80,7 @@ export default function Checkout() {
         address,
         city,
         state,
+        email: lotCheckEmail,
         budget,
         sqft,
         tier: buildTier,
@@ -143,6 +146,31 @@ export default function Checkout() {
                 placeholder="Fearing Hill Builders"
                 className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
               />
+            </div>
+            <div>
+              <label htmlFor="serviceState" className="block text-sm font-medium text-ink">
+                Primary service area (state)
+              </label>
+              <select
+                id="serviceState"
+                required
+                value={serviceState}
+                onChange={(e) => setServiceState(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              >
+                <option value="" disabled>
+                  Select a state
+                </option>
+                {US_STATES.map((s) => (
+                  <option key={s.code} value={s.code}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-ink-soft">
+                Buyers running a Lot Check in this state can connect with you
+                directly.
+              </p>
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <div>

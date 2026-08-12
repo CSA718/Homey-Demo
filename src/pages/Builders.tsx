@@ -24,8 +24,9 @@ export default function Builders() {
         </h1>
         <p className="mt-6 max-w-xl text-lg text-ink-soft">
           Route your unqualified inquiries to Homey instead of burning
-          estimator hours on them. Whoever comes back has a verified lot and
-          a real budget.
+          estimator hours on them. And buyers who run a Lot Check on their
+          own can find and connect with you directly — with their report and
+          budget already in hand.
         </p>
       </section>
 
@@ -72,6 +73,49 @@ export default function Builders() {
               unlock: the cold-start problem drops from needing 800
               individual customers to needing eight builder relationships.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Connect feature */}
+      <section className="border-t border-line bg-sand/60">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <h2 className="font-serif text-2xl text-ink sm:text-3xl">
+            Two ways leads reach you — both are already qualified.
+          </h2>
+          <p className="mt-3 max-w-2xl text-ink-soft">
+            You don't have to wait for your own inquiries to go cold before
+            Homey helps. Every buyer who runs a Lot Check sees member
+            builders in their state right on their results page, with a
+            "Connect" button that lands directly in your dashboard.
+          </p>
+          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+            <div className="rounded-xl border border-line bg-paper-raised p-6">
+              <p className="font-serif text-2xl text-forest/40">01</p>
+              <p className="mt-2 font-semibold text-ink">Buyer runs a Lot Check</p>
+              <p className="mt-2 text-sm text-ink-soft">
+                They get their buildability verdict and see whether their
+                budget actually covers the build.
+              </p>
+            </div>
+            <div className="rounded-xl border border-line bg-paper-raised p-6">
+              <p className="font-serif text-2xl text-forest/40">02</p>
+              <p className="mt-2 font-semibold text-ink">
+                They see you, right there
+              </p>
+              <p className="mt-2 text-sm text-ink-soft">
+                Member builders serving their state are listed on the same
+                page — no separate directory to find.
+              </p>
+            </div>
+            <div className="rounded-xl border border-clay/40 bg-clay/10 p-6">
+              <p className="font-serif text-2xl text-clay/60">03</p>
+              <p className="mt-2 font-semibold text-ink">You get a real lead</p>
+              <p className="mt-2 text-sm text-ink-soft">
+                One click sends their name, contact info, full report, and
+                budget fit straight into your dashboard.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -153,7 +197,8 @@ export default function Builders() {
           </div>
           <ul className="mt-6 space-y-3 text-sm text-ink-soft">
             <li>· Unlimited unqualified-lead routing</li>
-            <li>· Verified lot + budget on every returning buyer</li>
+            <li>· Listed to every buyer who runs a Lot Check in your state</li>
+            <li>· Verified lot + budget on every connection</li>
             <li>· Same price whether we send ten referrals or none</li>
             <li>· No tiers, no negotiation</li>
           </ul>

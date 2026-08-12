@@ -126,3 +126,32 @@ export function updateLeadStatus(
   localStorage.setItem(storageKey(accountId), JSON.stringify(leads));
   return leads;
 }
+
+// A buyer requesting to connect with a real member builder from the Lot
+// Check report — delivers an actual lead into that builder's dashboard,
+// not just a seeded example.
+export function addConnectionLead(
+  builderAccountId: string,
+  buyer: {
+    name: string;
+    email: string;
+    phone: string;
+    report: LotCheckReport;
+    budgetFit: BudgetFit;
+  },
+): Lead {
+  const existing = getLeadsForAccount(builderAccountId);
+  const lead: Lead = {
+    id: `connect-${builderAccountId}-${buyer.report.id}-${Date.now().toString(36)}`,
+    buyerName: buyer.name,
+    email: buyer.email,
+    phone: buyer.phone,
+    status: "new",
+    createdAt: new Date().toISOString(),
+    report: buyer.report,
+    budgetFit: buyer.budgetFit,
+  };
+  const updated = [lead, ...existing];
+  localStorage.setItem(storageKey(builderAccountId), JSON.stringify(updated));
+  return lead;
+}

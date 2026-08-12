@@ -3,6 +3,7 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { generateLotCheckReport, type LotCheckReport } from "../lib/lotCheck";
 import { computeBudgetFit, type BuildTier } from "../lib/budgetFit";
 import ReportView from "../components/ReportView";
+import ConnectWithBuilders from "../components/ConnectWithBuilders";
 
 const SCAN_STEPS = [
   { label: "Geocoding address (US Census Bureau)", live: true },
@@ -20,6 +21,7 @@ export default function Report() {
   const address = params.get("address") ?? "";
   const city = params.get("city") ?? "";
   const state = params.get("state") ?? "";
+  const email = params.get("email") ?? "";
   const budgetParam = params.get("budget");
   const sqftParam = params.get("sqft");
   const tierParam = params.get("tier") as BuildTier | null;
@@ -142,6 +144,8 @@ export default function Report() {
       <div className="mt-6">
         <ReportView report={report} budgetFit={budgetFit} />
       </div>
+
+      <ConnectWithBuilders report={report} budgetFit={budgetFit} email={email} />
 
       <div className="mt-10 flex flex-col gap-4 border-t border-line pt-8 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div>
