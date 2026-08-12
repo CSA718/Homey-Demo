@@ -1,4 +1,5 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm font-medium transition-colors ${
@@ -16,6 +17,9 @@ function HomeyMark() {
 }
 
 export default function Layout() {
+  const { account, logOut } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <div className="flex min-h-svh flex-col bg-paper text-ink">
       <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur">
@@ -34,13 +38,38 @@ export default function Layout() {
             <NavLink to="/how-it-works" className={navLinkClass}>
               How It Works
             </NavLink>
+            {account && (
+              <NavLink to="/dashboard" className={navLinkClass}>
+                Dashboard
+              </NavLink>
+            )}
           </nav>
-          <Link
-            to="/lot-check"
-            className="rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
-          >
-            Check a Lot
-          </Link>
+          <div className="flex items-center gap-3">
+            {account ? (
+              <button
+                onClick={() => {
+                  logOut();
+                  navigate("/");
+                }}
+                className="hidden text-sm font-medium text-ink-soft hover:text-forest sm:inline"
+              >
+                Log out
+              </button>
+            ) : (
+              <Link
+                to="/builder-login"
+                className="hidden text-sm font-medium text-ink-soft hover:text-forest sm:inline"
+              >
+                Builder Login
+              </Link>
+            )}
+            <Link
+              to="/lot-check"
+              className="rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
+            >
+              Check a Lot
+            </Link>
+          </div>
         </div>
       </header>
 

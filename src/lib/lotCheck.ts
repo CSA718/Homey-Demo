@@ -1,9 +1,16 @@
-// Deterministic mock "Lot Check" engine.
+// Lot Check engine.
 //
-// In production this queries MassGIS, MassDEP, FEMA, and USDA soils layers
-// with real parcel geometry. For this demo, the same address always produces
-// the same report (hashed seed -> seeded PRNG) so the flow feels real without
-// a GIS backend.
+// Wetlands, nitrogen-sensitive area, soils, zoning, priority habitat, and
+// wellhead protection don't have a single reliable statewide public API, so
+// those categories run on a deterministic mock (hashed seed -> seeded PRNG —
+// same address always produces the same findings). Flood zone is real: the
+// address is geocoded via the US Census Bureau's public geocoder and queried
+// live against FEMA's National Flood Hazard Layer. If either call fails
+// (network, timeout, or the service being unreachable), it falls back to the
+// same modeled approach as the other categories — the report never breaks.
+
+import { geocodeAddress } from "./geocode";
+import { queryFemaFloodZone, classifyFemaZone } from "./gis/femaFlood";
 
 export type RiskStatus = "clear" | "caution" | "flag";
 
@@ -14,6 +21,7 @@ export interface RiskCategory {
   status: RiskStatus;
   finding: string;
   costImpact: string | null;
+  live: boolean;
 }
 
 export interface LotCheckReport {
@@ -27,6 +35,8 @@ export interface LotCheckReport {
   verdictLabel: string;
   costRangeLow: number;
   costRangeHigh: number;
+  geocodedAddress: string | null;
+  coordinates: { lat: number; lon: number } | null;
 }
 
 // Coastal / wetland-heavy towns get skewed odds — matches the real geography
@@ -280,15 +290,15 @@ function parseCostRange(cost: string | null): [number, number] {
   return [nums[0], nums[nums.length - 1]];
 }
 
-export function generateLotCheckReport(
-  address: string,
-  town: string,
-): LotCheckReport {
-  const seed = hashString(`${address.trim().toLowerCase()}|${town}`);
+function computeSeed(address: string, town: string): number {
+  return hashString(`${address.trim().toLowerCase()}|${town}`);
+}
+
+function buildModeledCategories(seed: number, town: string): RiskCategory[] {
   const rng = mulberry32(seed);
   const isCoastal = COASTAL_TOWNS.has(town);
 
-  const categories: RiskCategory[] = CATEGORY_DEFS.map((def) => {
+  return CATEGORY_DEFS.map((def) => {
     const weights = { ...def.weights };
     if (isCoastal && def.coastalBoost) {
       const shift = def.coastalBoost * weights.clear;
@@ -306,9 +316,19 @@ export function generateLotCheckReport(
       status,
       finding,
       costImpact,
+      live: false,
     };
   });
+}
 
+function finalizeReport(
+  seed: number,
+  address: string,
+  town: string,
+  categories: RiskCategory[],
+  geocodedAddress: string | null,
+  coordinates: { lat: number; lon: number } | null,
+): LotCheckReport {
   const flagCount = categories.filter((c) => c.status === "flag").length;
   const cautionCount = categories.filter((c) => c.status === "caution").length;
 
@@ -343,5 +363,62 @@ export function generateLotCheckReport(
     verdictLabel,
     costRangeLow,
     costRangeHigh,
+    geocodedAddress,
+    coordinates,
   };
+}
+
+// Pure, synchronous, no network — used to seed instant demo data (e.g.
+// builder dashboard leads) without waiting on live GIS calls.
+export function generateModeledReport(
+  address: string,
+  town: string,
+): LotCheckReport {
+  const seed = computeSeed(address, town);
+  const categories = buildModeledCategories(seed, town);
+  return finalizeReport(seed, address, town, categories, null, null);
+}
+
+// Best-effort real data on top of the modeled engine: geocodes the address,
+// then queries FEMA's live flood hazard layer. Either step can fail for
+// reasons that have nothing to do with this app (network, timeout, the
+// service being down) — in that case the modeled flood category stands as-is
+// and the report still renders normally.
+export async function generateLotCheckReport(
+  address: string,
+  town: string,
+): Promise<LotCheckReport> {
+  const seed = computeSeed(address, town);
+  const categories = buildModeledCategories(seed, town);
+
+  let geocodedAddress: string | null = null;
+  let coordinates: { lat: number; lon: number } | null = null;
+  try {
+    const geo = await geocodeAddress(address, town);
+    if (geo) {
+      geocodedAddress = geo.matchedAddress;
+      coordinates = { lat: geo.lat, lon: geo.lon };
+      const fema = await queryFemaFloodZone(geo.lat, geo.lon);
+      if (fema) {
+        const { status, finding } = classifyFemaZone(fema);
+        const floodIndex = categories.findIndex((c) => c.key === "flood");
+        if (floodIndex !== -1) {
+          const floodDef = CATEGORY_DEFS.find((d) => d.key === "flood")!;
+          categories[floodIndex] = {
+            key: "flood",
+            label: floodDef.label,
+            source: "FEMA National Flood Hazard Layer (live query)",
+            status,
+            finding,
+            costImpact: floodDef.cost[status],
+            live: true,
+          };
+        }
+      }
+    }
+  } catch {
+    // Fall through with modeled data — the report always renders.
+  }
+
+  return finalizeReport(seed, address, town, categories, geocodedAddress, coordinates);
 }

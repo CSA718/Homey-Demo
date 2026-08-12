@@ -1,12 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const ESTIMATOR_RATE = 65; // $/hr, blended cost of estimator time
 const HOURS_PER_BID = 8; // midpoint of the 6–12 hour range
 
 export default function Builders() {
   const [inquiries, setInquiries] = useState(6);
-  const [submitted, setSubmitted] = useState(false);
-  const [email, setEmail] = useState("");
 
   const hoursSaved = inquiries * HOURS_PER_BID;
   const dollarsSaved = hoursSaved * ESTIMATOR_RATE;
@@ -168,6 +167,12 @@ export default function Builders() {
               <li>· Locked-in founding rate for as long as you stay</li>
               <li>· Direct line to Homey for edge cases</li>
             </ul>
+            <Link
+              to="/checkout?type=membership&tier=founding"
+              className="mt-6 block rounded-full bg-clay px-6 py-3 text-center text-sm font-semibold text-paper transition-colors hover:bg-clay-dark"
+            >
+              Join at the founding rate
+            </Link>
           </div>
           <div className="rounded-2xl border border-line bg-paper-raised p-8">
             <p className="text-sm font-semibold text-ink-soft">Standard rate</p>
@@ -180,50 +185,20 @@ export default function Builders() {
               <li>· Verified lot + budget on every returning buyer</li>
               <li>· Standard support</li>
             </ul>
+            <Link
+              to="/checkout?type=membership&tier=standard"
+              className="mt-6 block rounded-full border border-line px-6 py-3 text-center text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
+            >
+              Join at the standard rate
+            </Link>
           </div>
         </div>
-      </section>
-
-      {/* CTA / mock signup */}
-      <section className="border-t border-line bg-sand/60">
-        <div className="mx-auto max-w-xl px-6 py-16 text-center">
-          <h2 className="font-serif text-2xl text-ink sm:text-3xl">
-            Claim a founding membership spot
-          </h2>
-          <p className="mt-3 text-ink-soft">
-            Five founding spots at $500–600/mo. This is a demo — submitting
-            won't send anything anywhere.
-          </p>
-          {submitted ? (
-            <div className="mt-6 rounded-xl border border-clear/30 bg-clear-bg px-6 py-5 text-clear">
-              Thanks — in a real deployment, Homey would follow up to confirm
-              your founding rate.
-            </div>
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSubmitted(true);
-              }}
-              className="mt-6 flex flex-col gap-3 sm:flex-row"
-            >
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@builder.com"
-                className="flex-1 rounded-full border border-line bg-paper-raised px-5 py-3 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-              />
-              <button
-                type="submit"
-                className="rounded-full bg-clay px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-clay-dark"
-              >
-                Request a spot
-              </button>
-            </form>
-          )}
-        </div>
+        <p className="mt-6 text-center text-sm text-ink-soft">
+          Already a member?{" "}
+          <Link to="/builder-login" className="font-semibold text-forest hover:underline">
+            Log in to your dashboard
+          </Link>
+        </p>
       </section>
     </div>
   );
