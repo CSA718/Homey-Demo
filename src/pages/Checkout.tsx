@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { signUp, type MembershipTier } from "../lib/auth";
+import { signUp } from "../lib/auth";
 import { useAuth } from "../context/AuthContext";
+
+const MEMBERSHIP_PRICE = 499;
 
 function formatCardNumber(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 16);
@@ -29,10 +31,6 @@ export default function Checkout() {
   const sqft = params.get("sqft") ?? "";
   const buildTier = params.get("tier") ?? "";
 
-  // Membership params
-  const tier: MembershipTier = params.get("tier") === "standard" ? "standard" : "founding";
-  const tierPrice = tier === "founding" ? 550 : 1000;
-
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState(lotCheckEmail);
   const [password, setPassword] = useState("");
@@ -43,12 +41,12 @@ export default function Checkout() {
   const [status, setStatus] = useState<"form" | "processing" | "error">("form");
   const [error, setError] = useState<string | null>(null);
 
-  const amount = type === "lotcheck" ? 149 : tierPrice;
-  const title = type === "lotcheck" ? "Lot Check" : `Homey Membership — ${tier === "founding" ? "Founding rate" : "Standard rate"}`;
+  const amount = type === "lotcheck" ? 25 : MEMBERSHIP_PRICE;
+  const title = type === "lotcheck" ? "Lot Check" : "Homey Membership";
   const subtitle =
     type === "lotcheck"
       ? `${address}, ${town}, MA`
-      : `${tier === "founding" ? "$550–600" : "$1,000"}/mo, billed monthly`;
+      : "Flat rate, billed monthly";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,7 +63,7 @@ export default function Checkout() {
 
     window.setTimeout(() => {
       if (type === "membership") {
-        const result = signUp(businessName, email, password, tier);
+        const result = signUp(businessName, email, password);
         if ("error" in result) {
           setStatus("form");
           setError(result.error);

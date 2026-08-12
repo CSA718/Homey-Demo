@@ -78,7 +78,16 @@ export default function BudgetFitCard({ fit }: { fit: BudgetFit }) {
         </p>
       </div>
 
-      <div className="mt-6 grid gap-4 border-t border-line pt-6 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 border-t border-line pt-6 sm:grid-cols-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+            Estimated land value
+          </p>
+          <p className="mt-1 text-ink">
+            {formatMoney(fit.landCostLow)}–{formatMoney(fit.landCostHigh)}
+          </p>
+          <p className="text-xs text-ink-soft">Modeled from town + parcel acreage</p>
+        </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
             Base construction estimate
@@ -92,7 +101,7 @@ export default function BudgetFitCard({ fit }: { fit: BudgetFit }) {
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-            Total estimated cost (incl. this lot's site costs)
+            Total estimated cost
           </p>
           <p className="mt-1 text-ink">
             {formatMoney(fit.totalCostLow)}–{formatMoney(fit.totalCostHigh)}
@@ -106,10 +115,12 @@ export default function BudgetFitCard({ fit }: { fit: BudgetFit }) {
       </div>
 
       <p className="mt-6 rounded-lg bg-sand px-4 py-3 text-xs text-ink-soft">
-        Estimate only — based on a regional per-square-foot construction
-        range for the selected build tier, plus this lot's estimated
-        site-specific costs from the screening above. Does not include land
-        purchase price and is not a substitute for a contractor's quote.
+        Estimate only — land value is modeled from this town's typical
+        per-acre range and the parcel's acreage (not a lookup of this
+        specific lot's asking or sale price), construction cost is a
+        regional per-square-foot range for the selected build tier, and site
+        costs come from the screening above. Not a substitute for an
+        appraisal or a contractor's quote.
       </p>
     </div>
   );

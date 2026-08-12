@@ -56,7 +56,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-            {account.tier === "founding" ? "Founding member" : "Standard member"}
+            Homey Member
           </span>
           <h1 className="mt-3 font-serif text-3xl text-ink">{account.businessName}</h1>
           <p className="mt-1 text-ink-soft">

@@ -3,15 +3,14 @@ import { Link } from "react-router-dom";
 
 const ESTIMATOR_RATE = 65; // $/hr, blended cost of estimator time
 const HOURS_PER_BID = 8; // midpoint of the 6–12 hour range
+const MEMBERSHIP_PRICE = 499;
 
 export default function Builders() {
   const [inquiries, setInquiries] = useState(6);
 
   const hoursSaved = inquiries * HOURS_PER_BID;
   const dollarsSaved = hoursSaved * ESTIMATOR_RATE;
-  const foundingCost = 550;
-  const netFounding = dollarsSaved - foundingCost;
-  const netStandard = dollarsSaved - 1000;
+  const net = dollarsSaved - MEMBERSHIP_PRICE;
 
   return (
     <div>
@@ -130,16 +129,13 @@ export default function Builders() {
               </div>
               <div className="col-span-2 rounded-xl border border-clay/40 bg-clay/10 p-5">
                 <p className="text-xs uppercase tracking-wide text-clay-light">
-                  Net at founding rate ($550/mo)
+                  Net after membership (${MEMBERSHIP_PRICE}/mo flat)
                 </p>
                 <p className="mt-1 font-serif text-3xl text-paper">
-                  {netFounding >= 0 ? "+" : "−"}$
-                  {Math.abs(netFounding).toLocaleString("en-US")}
+                  {net >= 0 ? "+" : "−"}$
+                  {Math.abs(net).toLocaleString("en-US")}
                 </p>
-                <p className="text-xs text-paper/50">
-                  vs. ${netStandard.toLocaleString("en-US")} net at the
-                  standard $1,000/mo rate
-                </p>
+                <p className="text-xs text-paper/50">per month, before a single closed deal</p>
               </div>
             </div>
           </div>
@@ -149,49 +145,24 @@ export default function Builders() {
       {/* Pricing */}
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="font-serif text-2xl text-ink sm:text-3xl">Membership</h2>
-        <div className="mt-8 grid gap-8 lg:grid-cols-2">
-          <div className="rounded-2xl border-2 border-clay bg-paper-raised p-8">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-clay">Founding rate</p>
-              <span className="rounded-full bg-clay/10 px-3 py-1 text-xs font-semibold text-clay">
-                First 5 builders only
-              </span>
-            </div>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="font-serif text-4xl text-ink">$500–600</span>
-              <span className="text-sm text-ink-soft">/mo</span>
-            </div>
-            <ul className="mt-6 space-y-3 text-sm text-ink-soft">
-              <li>· Unlimited unqualified-lead routing</li>
-              <li>· Verified lot + budget on every returning buyer</li>
-              <li>· Locked-in founding rate for as long as you stay</li>
-              <li>· Direct line to Homey for edge cases</li>
-            </ul>
-            <Link
-              to="/checkout?type=membership&tier=founding"
-              className="mt-6 block rounded-full bg-clay px-6 py-3 text-center text-sm font-semibold text-paper transition-colors hover:bg-clay-dark"
-            >
-              Join at the founding rate
-            </Link>
+        <div className="mx-auto mt-8 max-w-md rounded-2xl border-2 border-clay bg-paper-raised p-8">
+          <p className="text-sm font-semibold text-clay">Flat rate, every builder</p>
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="font-serif text-4xl text-ink">${MEMBERSHIP_PRICE}</span>
+            <span className="text-sm text-ink-soft">/mo</span>
           </div>
-          <div className="rounded-2xl border border-line bg-paper-raised p-8">
-            <p className="text-sm font-semibold text-ink-soft">Standard rate</p>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="font-serif text-4xl text-ink">$1,000</span>
-              <span className="text-sm text-ink-soft">/mo</span>
-            </div>
-            <ul className="mt-6 space-y-3 text-sm text-ink-soft">
-              <li>· Unlimited unqualified-lead routing</li>
-              <li>· Verified lot + budget on every returning buyer</li>
-              <li>· Standard support</li>
-            </ul>
-            <Link
-              to="/checkout?type=membership&tier=standard"
-              className="mt-6 block rounded-full border border-line px-6 py-3 text-center text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
-            >
-              Join at the standard rate
-            </Link>
-          </div>
+          <ul className="mt-6 space-y-3 text-sm text-ink-soft">
+            <li>· Unlimited unqualified-lead routing</li>
+            <li>· Verified lot + budget on every returning buyer</li>
+            <li>· Same price whether we send ten referrals or none</li>
+            <li>· No tiers, no negotiation</li>
+          </ul>
+          <Link
+            to="/checkout?type=membership"
+            className="mt-6 block rounded-full bg-clay px-6 py-3 text-center text-sm font-semibold text-paper transition-colors hover:bg-clay-dark"
+          >
+            Join Homey
+          </Link>
         </div>
         <p className="mt-6 text-center text-sm text-ink-soft">
           Already a member?{" "}

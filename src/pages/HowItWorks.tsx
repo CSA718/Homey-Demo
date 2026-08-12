@@ -11,7 +11,7 @@ const STEPS = [
   {
     n: "01",
     title: "Automated data pull",
-    body: "Deterministic code — not AI — queries the parcel against seven public GIS layers. Same input, same output, every time. This is what makes a $149 report possible at all.",
+    body: "Deterministic code — not AI — queries the parcel against seven public GIS layers. Same input, same output, every time. This is what makes a $25 report possible at all.",
   },
   {
     n: "02",

@@ -38,6 +38,8 @@ export default function Report() {
       tierParam,
       report.costRangeLow,
       report.costRangeHigh,
+      report.landCostLow,
+      report.landCostHigh,
     );
   }, [report, budgetParam, sqftParam, tierParam]);
   const [scanned, setScanned] = useState(0);

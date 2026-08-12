@@ -30,7 +30,7 @@ export default function LotCheck() {
   return (
     <div className="mx-auto max-w-xl px-6 py-16 sm:py-24">
       <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-        Lot Check · $149
+        Lot Check · $25
       </span>
       <h1 className="mt-6 font-serif text-3xl text-ink sm:text-4xl">
         Find out if a lot is buildable — and if your budget covers it.
@@ -168,7 +168,7 @@ export default function LotCheck() {
           type="submit"
           className="w-full rounded-full bg-forest px-6 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark disabled:opacity-50"
         >
-          Continue to payment — $149
+          Continue to payment — $25
         </button>
         <p className="text-center text-xs text-ink-soft">
           This demo uses a mocked checkout — no real payment is processed.

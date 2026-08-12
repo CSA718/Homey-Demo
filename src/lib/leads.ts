@@ -79,6 +79,8 @@ function seedLeadsForAccount(accountId: string): Lead[] {
       buyer.tier,
       report.costRangeLow,
       report.costRangeHigh,
+      report.landCostLow,
+      report.landCostHigh,
     );
     const createdAt = new Date(
       Date.now() - buyer.daysAgo * 24 * 60 * 60 * 1000,

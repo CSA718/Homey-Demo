@@ -1,8 +1,8 @@
 // Budget Fit: compares a buyer's stated budget against a realistic estimated
-// build cost — a regional per-square-foot construction range for their
-// chosen tier, plus this specific lot's site-specific added costs (from the
-// Lot Check report's flagged/cautioned categories). Land purchase price is
-// not included; this is a construction-cost estimate only.
+// total cost to own the finished home — the lot's estimated land value, plus
+// a regional per-square-foot construction range for their chosen tier, plus
+// this specific lot's site-specific added costs (from the Lot Check report's
+// flagged/cautioned categories).
 
 export type BuildTier = "standard" | "custom" | "high-end";
 
@@ -44,6 +44,8 @@ export interface BudgetFit {
   budget: number;
   sqft: number;
   tier: BuildTier;
+  landCostLow: number;
+  landCostHigh: number;
   baseCostLow: number;
   baseCostHigh: number;
   totalCostLow: number;
@@ -60,12 +62,14 @@ export function computeBudgetFit(
   tier: BuildTier,
   siteCostLow: number,
   siteCostHigh: number,
+  landCostLow: number,
+  landCostHigh: number,
 ): BudgetFit {
   const tierDef = BUILD_TIERS.find((t) => t.value === tier) ?? BUILD_TIERS[1];
   const baseCostLow = sqft * tierDef.rateLow;
   const baseCostHigh = sqft * tierDef.rateHigh;
-  const totalCostLow = baseCostLow + siteCostLow;
-  const totalCostHigh = baseCostHigh + siteCostHigh;
+  const totalCostLow = baseCostLow + siteCostLow + landCostLow;
+  const totalCostHigh = baseCostHigh + siteCostHigh + landCostHigh;
 
   let status: BudgetFitStatus;
   let statusLabel: string;
@@ -98,6 +102,8 @@ export function computeBudgetFit(
     budget,
     sqft,
     tier,
+    landCostLow,
+    landCostHigh,
     baseCostLow,
     baseCostHigh,
     totalCostLow,

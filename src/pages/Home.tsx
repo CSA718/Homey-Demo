@@ -33,7 +33,7 @@ export default function Home() {
                 to="/lot-check"
                 className="rounded-full bg-forest px-7 py-3.5 text-center text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
               >
-                Get a Lot Check — $149
+                Get a Lot Check — $25
               </Link>
               <Link
                 to="/builders"
@@ -133,7 +133,7 @@ export default function Home() {
               the lot works — and what the surprises will cost.
             </p>
             <div className="mt-6 flex items-baseline gap-2">
-              <span className="font-serif text-3xl text-ink">$149</span>
+              <span className="font-serif text-3xl text-ink">$25</span>
               <span className="text-sm text-ink-soft">· 48-hour turnaround</span>
             </div>
             <Link
@@ -155,10 +155,8 @@ export default function Home() {
               and a real budget — you only spend time on leads worth having.
             </p>
             <div className="mt-6 flex items-baseline gap-2">
-              <span className="font-serif text-3xl text-ink">$1,000</span>
-              <span className="text-sm text-ink-soft">
-                /mo · $500–600 founding rate for the first five
-              </span>
+              <span className="font-serif text-3xl text-ink">$499</span>
+              <span className="text-sm text-ink-soft">/mo · flat rate, every builder</span>
             </div>
             <Link
               to="/builders"
@@ -219,7 +217,7 @@ export default function Home() {
             to="/lot-check"
             className="rounded-full bg-forest px-8 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
           >
-            Get a Lot Check — $149
+            Get a Lot Check — $25
           </Link>
           <Link
             to="/builders"

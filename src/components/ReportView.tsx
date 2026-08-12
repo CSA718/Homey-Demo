@@ -50,7 +50,7 @@ export default function ReportView({
           <VerdictBadge verdict={report.verdict} label={report.verdictLabel} />
         </div>
 
-        <div className="grid gap-4 border-t border-line pt-6 sm:grid-cols-3">
+        <div className="grid gap-4 border-t border-line pt-6 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
               Flags
@@ -71,6 +71,14 @@ export default function ReportView({
               {report.costRangeHigh === 0
                 ? "None identified"
                 : `${formatMoney(report.costRangeLow)}–${formatMoney(report.costRangeHigh)}`}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+              Estimated land value
+            </p>
+            <p className="mt-1 font-serif text-2xl text-ink">
+              {formatMoney(report.landCostLow)}–{formatMoney(report.landCostHigh)}
             </p>
           </div>
         </div>

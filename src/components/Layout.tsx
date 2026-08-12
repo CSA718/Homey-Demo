@@ -94,7 +94,7 @@ export default function Layout() {
               <ul className="mt-3 space-y-2 text-sm text-ink-soft">
                 <li>
                   <Link to="/lot-check" className="hover:text-forest">
-                    Get a Lot Check — $149
+                    Get a Lot Check — $25
                   </Link>
                 </li>
                 <li>
@@ -109,12 +109,12 @@ export default function Layout() {
               <ul className="mt-3 space-y-2 text-sm text-ink-soft">
                 <li>
                   <Link to="/builders" className="hover:text-forest">
-                    Membership — $1,000/mo
+                    Membership — $499/mo flat
                   </Link>
                 </li>
                 <li>
-                  <Link to="/builders" className="hover:text-forest">
-                    Founding member rate
+                  <Link to="/builder-login" className="hover:text-forest">
+                    Builder login
                   </Link>
                 </li>
               </ul>

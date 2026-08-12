@@ -37,7 +37,34 @@ export interface LotCheckReport {
   costRangeHigh: number;
   geocodedAddress: string | null;
   coordinates: { lat: number; lon: number } | null;
+  landCostLow: number;
+  landCostHigh: number;
 }
+
+// Modeled land value per acre by town — illustrative only (no free public
+// source for real land valuations, unlike the regulatory GIS layers above).
+// Roughly reflects relative land costs across Southeastern MA: coastal
+// Buzzards Bay towns run well above inland towns.
+const TOWN_LAND_RATE_PER_ACRE: Record<string, { low: number; high: number }> = {
+  Marion: { low: 300000, high: 380000 },
+  Mattapoisett: { low: 280000, high: 350000 },
+  Westport: { low: 240000, high: 300000 },
+  Dartmouth: { low: 220000, high: 280000 },
+  Fairhaven: { low: 200000, high: 260000 },
+  Plymouth: { low: 190000, high: 240000 },
+  Wareham: { low: 170000, high: 220000 },
+  Somerset: { low: 180000, high: 220000 },
+  Seekonk: { low: 170000, high: 210000 },
+  Swansea: { low: 170000, high: 210000 },
+  Acushnet: { low: 150000, high: 190000 },
+  Lakeville: { low: 150000, high: 190000 },
+  Rochester: { low: 130000, high: 170000 },
+  Middleborough: { low: 120000, high: 160000 },
+  Carver: { low: 120000, high: 160000 },
+  Rehoboth: { low: 120000, high: 150000 },
+  Freetown: { low: 110000, high: 140000 },
+  Berkley: { low: 110000, high: 140000 },
+};
 
 // Coastal / wetland-heavy towns get skewed odds — matches the real geography
 // of Southeastern MA (Buzzards Bay watershed towns run wetter and closer to
@@ -350,7 +377,12 @@ function finalizeReport(
   const costRangeHigh = costRanges.reduce((sum, [, high]) => sum + high, 0);
 
   const acreageRng = mulberry32(seed ^ 0x9e3779b9);
-  const parcelAcreage = (0.35 + acreageRng() * 2.4).toFixed(2);
+  const acreage = 0.35 + acreageRng() * 2.4;
+  const parcelAcreage = acreage.toFixed(2);
+
+  const landRate = TOWN_LAND_RATE_PER_ACRE[town] ?? { low: 140000, high: 180000 };
+  const landCostLow = Math.round((acreage * landRate.low) / 1000) * 1000;
+  const landCostHigh = Math.round((acreage * landRate.high) / 1000) * 1000;
 
   return {
     id: seed.toString(36),
@@ -365,6 +397,8 @@ function finalizeReport(
     costRangeHigh,
     geocodedAddress,
     coordinates,
+    landCostLow,
+    landCostHigh,
   };
 }
 

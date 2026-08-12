@@ -3,13 +3,10 @@
 // non-cryptographic checksum, adequate only because this data never leaves
 // the browser; it is not a real auth system.
 
-export type MembershipTier = "founding" | "standard";
-
 export interface BuilderAccount {
   id: string;
   businessName: string;
   email: string;
-  tier: MembershipTier;
   createdAt: string;
 }
 
@@ -50,7 +47,6 @@ export function signUp(
   businessName: string,
   email: string,
   password: string,
-  tier: MembershipTier,
 ): { account: BuilderAccount } | { error: string } {
   const normalizedEmail = email.trim().toLowerCase();
   const accounts = readAccounts();
@@ -61,7 +57,6 @@ export function signUp(
     id: Math.random().toString(36).slice(2, 10),
     businessName: businessName.trim(),
     email: normalizedEmail,
-    tier,
     createdAt: new Date().toISOString(),
     passwordHash: hashPassword(password),
   };
