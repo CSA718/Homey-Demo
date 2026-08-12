@@ -34,7 +34,7 @@ export default function ReportView({
               {report.address}
             </h1>
             <p className="mt-1 text-ink-soft">
-              {report.town}, MA · {report.parcelAcreage} acres · Screened{" "}
+              {report.city}, {report.state} · {report.parcelAcreage} acres · Screened{" "}
               {submitted.toLocaleDateString("en-US", {
                 month: "long",
                 day: "numeric",
@@ -132,8 +132,8 @@ export default function ReportView({
           This is a preliminary screening, not a buildability determination.
         </p>
         <p className="mt-2">
-          Findings are generated from public GIS data (MassGIS, MassDEP,
-          FEMA, USDA NRCS, town records) and reviewed by a credentialed
+          Findings are generated from public GIS data (US Census, FEMA, USDA
+          NRCS, state and local records) and reviewed by a credentialed
           professional before delivery. Flagged and cautioned items identify
           risks that require site-specific verification — a wetland
           delineation, perc test, or survey — before you rely on them for a

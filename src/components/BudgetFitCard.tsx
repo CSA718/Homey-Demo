@@ -86,7 +86,7 @@ export default function BudgetFitCard({ fit }: { fit: BudgetFit }) {
           <p className="mt-1 text-ink">
             {formatMoney(fit.landCostLow)}–{formatMoney(fit.landCostHigh)}
           </p>
-          <p className="text-xs text-ink-soft">Modeled from town + parcel acreage</p>
+          <p className="text-xs text-ink-soft">Modeled from state + parcel acreage</p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
@@ -115,7 +115,7 @@ export default function BudgetFitCard({ fit }: { fit: BudgetFit }) {
       </div>
 
       <p className="mt-6 rounded-lg bg-sand px-4 py-3 text-xs text-ink-soft">
-        Estimate only — land value is modeled from this town's typical
+        Estimate only — land value is modeled from this state's typical
         per-acre range and the parcel's acreage (not a lookup of this
         specific lot's asking or sale price), construction cost is a
         regional per-square-foot range for the selected build tier, and site

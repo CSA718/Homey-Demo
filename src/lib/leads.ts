@@ -32,7 +32,8 @@ interface SampleBuyer {
   email: string;
   phone: string;
   address: string;
-  town: string;
+  city: string;
+  state: string;
   budget: number;
   sqft: number;
   tier: BuildTier;
@@ -41,20 +42,20 @@ interface SampleBuyer {
 }
 
 const SAMPLE_BUYERS: SampleBuyer[] = [
-  { name: "Jordan Silva", email: "jordan.silva@example.com", phone: "(508) 555-0142", address: "18 Cranberry Way", town: "Wareham", budget: 650000, sqft: 2400, tier: "custom", daysAgo: 2, status: "new" },
-  { name: "Priya Nair", email: "priya.nair@example.com", phone: "(774) 555-0118", address: "204 Rounseville Rd", town: "Rochester", budget: 575000, sqft: 2200, tier: "standard", daysAgo: 4, status: "new" },
-  { name: "Marcus Bell", email: "marcus.bell@example.com", phone: "(508) 555-0173", address: "9 Point Rd", town: "Marion", budget: 975000, sqft: 3200, tier: "high-end", daysAgo: 6, status: "contacted" },
-  { name: "Erin Kowalski", email: "erin.kowalski@example.com", phone: "(774) 555-0186", address: "56 Long Plain Rd", town: "Freetown", budget: 500000, sqft: 2000, tier: "standard", daysAgo: 9, status: "contacted" },
-  { name: "David Chu", email: "david.chu@example.com", phone: "(508) 555-0159", address: "112 Horseneck Rd", town: "Westport", budget: 740000, sqft: 2600, tier: "custom", daysAgo: 12, status: "bid_sent" },
-  { name: "Alicia Ferreira", email: "alicia.ferreira@example.com", phone: "(508) 555-0127", address: "33 Rock O'Dundee Rd", town: "Dartmouth", budget: 635000, sqft: 2300, tier: "custom", daysAgo: 15, status: "bid_sent" },
-  { name: "Tom Whitfield", email: "tom.whitfield@example.com", phone: "(774) 555-0164", address: "77 Precinct St", town: "Lakeville", budget: 560000, sqft: 2100, tier: "standard", daysAgo: 22, status: "won" },
-  { name: "Nina Alves", email: "nina.alves@example.com", phone: "(508) 555-0193", address: "14 Sconticut Neck Rd", town: "Fairhaven", budget: 680000, sqft: 2400, tier: "custom", daysAgo: 27, status: "lost" },
+  { name: "Jordan Silva", email: "jordan.silva@example.com", phone: "(508) 555-0142", address: "18 Cranberry Way", city: "Wareham", state: "MA", budget: 650000, sqft: 2400, tier: "custom", daysAgo: 2, status: "new" },
+  { name: "Priya Nair", email: "priya.nair@example.com", phone: "(512) 555-0118", address: "512 Sunset Ridge Dr", city: "Austin", state: "TX", budget: 575000, sqft: 2200, tier: "standard", daysAgo: 4, status: "new" },
+  { name: "Marcus Bell", email: "marcus.bell@example.com", phone: "(303) 555-0173", address: "88 Ridgecrest Ave", city: "Boulder", state: "CO", budget: 975000, sqft: 3200, tier: "high-end", daysAgo: 6, status: "contacted" },
+  { name: "Erin Kowalski", email: "erin.kowalski@example.com", phone: "(828) 555-0186", address: "245 Magnolia Ln", city: "Asheville", state: "NC", budget: 500000, sqft: 2000, tier: "standard", daysAgo: 9, status: "contacted" },
+  { name: "David Chu", email: "david.chu@example.com", phone: "(239) 555-0159", address: "1400 Cypress Point Dr", city: "Naples", state: "FL", budget: 740000, sqft: 2600, tier: "custom", daysAgo: 12, status: "bid_sent" },
+  { name: "Alicia Ferreira", email: "alicia.ferreira@example.com", phone: "(707) 555-0127", address: "76 Meadowbrook Rd", city: "Petaluma", state: "CA", budget: 900000, sqft: 2300, tier: "custom", daysAgo: 15, status: "bid_sent" },
+  { name: "Tom Whitfield", email: "tom.whitfield@example.com", phone: "(615) 555-0164", address: "310 Elm Creek Dr", city: "Franklin", state: "TN", budget: 560000, sqft: 2100, tier: "standard", daysAgo: 22, status: "won" },
+  { name: "Nina Alves", email: "nina.alves@example.com", phone: "(508) 555-0193", address: "14 Sconticut Neck Rd", city: "Fairhaven", state: "MA", budget: 680000, sqft: 2400, tier: "custom", daysAgo: 27, status: "lost" },
 ];
 
 // Bumped when the stored Lead shape changes, so returning demo accounts with
 // an older shape in localStorage reseed cleanly instead of rendering with
 // missing fields.
-const LEADS_KEY_PREFIX = "homey_demo_leads_v2_";
+const LEADS_KEY_PREFIX = "homey_demo_leads_v3_";
 
 function hashString(input: string): number {
   let hash = 5381;
@@ -72,7 +73,7 @@ function seedLeadsForAccount(accountId: string): Lead[] {
     .slice(0, count);
 
   return buyers.map((buyer) => {
-    const report = generateModeledReport(buyer.address, buyer.town);
+    const report = generateModeledReport(buyer.address, buyer.city, buyer.state);
     const budgetFit = computeBudgetFit(
       buyer.budget,
       buyer.sqft,

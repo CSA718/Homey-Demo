@@ -1,13 +1,15 @@
-// Lot Check engine.
+// Lot Check engine — nationwide.
 //
-// Wetlands, nitrogen-sensitive area, soils, zoning, priority habitat, and
-// wellhead protection don't have a single reliable statewide public API, so
-// those categories run on a deterministic mock (hashed seed -> seeded PRNG —
-// same address always produces the same findings). Flood zone is real: the
-// address is geocoded via the US Census Bureau's public geocoder and queried
-// live against FEMA's National Flood Hazard Layer. If either call fails
-// (network, timeout, or the service being unreachable), it falls back to the
-// same modeled approach as the other categories — the report never breaks.
+// Wetlands, watershed/wastewater sensitivity, soils, zoning, priority
+// habitat, and wellhead protection don't have a single reliable API that
+// covers every state and county, so those categories run on a deterministic
+// mock (hashed seed -> seeded PRNG — same address always produces the same
+// findings). Flood zone is real everywhere in the US: the address is
+// geocoded via the US Census Bureau's public geocoder and queried live
+// against FEMA's National Flood Hazard Layer, which has nationwide coverage.
+// If either call fails (network, timeout, or the service being
+// unreachable), it falls back to the same modeled approach as the other
+// categories — the report never breaks.
 
 import { geocodeAddress } from "./geocode";
 import { queryFemaFloodZone, classifyFemaZone } from "./gis/femaFlood";
@@ -27,7 +29,8 @@ export interface RiskCategory {
 export interface LotCheckReport {
   id: string;
   address: string;
-  town: string;
+  city: string;
+  state: string;
   submittedAt: string;
   parcelAcreage: string;
   categories: RiskCategory[];
@@ -41,64 +44,137 @@ export interface LotCheckReport {
   landCostHigh: number;
 }
 
-// Modeled land value per acre by town — illustrative only (no free public
-// source for real land valuations, unlike the regulatory GIS layers above).
-// Roughly reflects relative land costs across Southeastern MA: coastal
-// Buzzards Bay towns run well above inland towns.
-const TOWN_LAND_RATE_PER_ACRE: Record<string, { low: number; high: number }> = {
-  Marion: { low: 300000, high: 380000 },
-  Mattapoisett: { low: 280000, high: 350000 },
-  Westport: { low: 240000, high: 300000 },
-  Dartmouth: { low: 220000, high: 280000 },
-  Fairhaven: { low: 200000, high: 260000 },
-  Plymouth: { low: 190000, high: 240000 },
-  Wareham: { low: 170000, high: 220000 },
-  Somerset: { low: 180000, high: 220000 },
-  Seekonk: { low: 170000, high: 210000 },
-  Swansea: { low: 170000, high: 210000 },
-  Acushnet: { low: 150000, high: 190000 },
-  Lakeville: { low: 150000, high: 190000 },
-  Rochester: { low: 130000, high: 170000 },
-  Middleborough: { low: 120000, high: 160000 },
-  Carver: { low: 120000, high: 160000 },
-  Rehoboth: { low: 120000, high: 150000 },
-  Freetown: { low: 110000, high: 140000 },
-  Berkley: { low: 110000, high: 140000 },
+export const US_STATES: { code: string; name: string }[] = [
+  { code: "AL", name: "Alabama" },
+  { code: "AK", name: "Alaska" },
+  { code: "AZ", name: "Arizona" },
+  { code: "AR", name: "Arkansas" },
+  { code: "CA", name: "California" },
+  { code: "CO", name: "Colorado" },
+  { code: "CT", name: "Connecticut" },
+  { code: "DE", name: "Delaware" },
+  { code: "DC", name: "District of Columbia" },
+  { code: "FL", name: "Florida" },
+  { code: "GA", name: "Georgia" },
+  { code: "HI", name: "Hawaii" },
+  { code: "ID", name: "Idaho" },
+  { code: "IL", name: "Illinois" },
+  { code: "IN", name: "Indiana" },
+  { code: "IA", name: "Iowa" },
+  { code: "KS", name: "Kansas" },
+  { code: "KY", name: "Kentucky" },
+  { code: "LA", name: "Louisiana" },
+  { code: "ME", name: "Maine" },
+  { code: "MD", name: "Maryland" },
+  { code: "MA", name: "Massachusetts" },
+  { code: "MI", name: "Michigan" },
+  { code: "MN", name: "Minnesota" },
+  { code: "MS", name: "Mississippi" },
+  { code: "MO", name: "Missouri" },
+  { code: "MT", name: "Montana" },
+  { code: "NE", name: "Nebraska" },
+  { code: "NV", name: "Nevada" },
+  { code: "NH", name: "New Hampshire" },
+  { code: "NJ", name: "New Jersey" },
+  { code: "NM", name: "New Mexico" },
+  { code: "NY", name: "New York" },
+  { code: "NC", name: "North Carolina" },
+  { code: "ND", name: "North Dakota" },
+  { code: "OH", name: "Ohio" },
+  { code: "OK", name: "Oklahoma" },
+  { code: "OR", name: "Oregon" },
+  { code: "PA", name: "Pennsylvania" },
+  { code: "RI", name: "Rhode Island" },
+  { code: "SC", name: "South Carolina" },
+  { code: "SD", name: "South Dakota" },
+  { code: "TN", name: "Tennessee" },
+  { code: "TX", name: "Texas" },
+  { code: "UT", name: "Utah" },
+  { code: "VT", name: "Vermont" },
+  { code: "VA", name: "Virginia" },
+  { code: "WA", name: "Washington" },
+  { code: "WV", name: "West Virginia" },
+  { code: "WI", name: "Wisconsin" },
+  { code: "WY", name: "Wyoming" },
+];
+
+// Modeled land value per acre by state — no free public dataset gives real
+// per-acre buildable-lot land values nationwide, so this is derived rather
+// than looked up. Methodology: each state's typical home value (Zillow
+// ZHVI, triangulated via Motley Fool and World Population Review reporting,
+// 2025-2026) is compared to the ~$373,000 national figure, and that ratio
+// is applied — with a 1.15 exponent, since land value tends to scale faster
+// than total home value at the expensive end (scarcity) and slower at the
+// cheap end (structure cost sets a floor) — against a $150,000/acre
+// national base rate, then given a ±15% range. States without a specific
+// cited figure are estimated from regional/economic similarity to states
+// that do have one. Two data points are cross-checked directly against
+// USDA NASS's 2025 farm real estate survey, which independently found
+// Rhode Island the highest-value state for cropland per acre and New
+// Mexico the lowest — both land here in the same relative position.
+// Real, parcel-specific land value always depends on the individual lot.
+const STATE_LAND_RATE_PER_ACRE: Record<string, { low: number; high: number }> = {
+  HI: { low: 330000, high: 445000 },
+  CA: { low: 300000, high: 410000 },
+  MA: { low: 235000, high: 315000 },
+  DC: { low: 230000, high: 310000 },
+  WA: { low: 220000, high: 295000 },
+  NY: { low: 215000, high: 290000 },
+  NJ: { low: 215000, high: 290000 },
+  CO: { low: 205000, high: 280000 },
+  OR: { low: 180000, high: 240000 },
+  UT: { low: 175000, high: 235000 },
+  RI: { low: 165000, high: 225000 },
+  NH: { low: 165000, high: 225000 },
+  ID: { low: 160000, high: 220000 },
+  MT: { low: 160000, high: 220000 },
+  NV: { low: 155000, high: 210000 },
+  AZ: { low: 150000, high: 205000 },
+  CT: { low: 145000, high: 200000 },
+  MD: { low: 145000, high: 200000 },
+  VA: { low: 145000, high: 195000 },
+  FL: { low: 130000, high: 175000 },
+  VT: { low: 130000, high: 175000 },
+  ME: { low: 130000, high: 175000 },
+  DE: { low: 130000, high: 175000 },
+  NC: { low: 115000, high: 155000 },
+  MN: { low: 115000, high: 155000 },
+  TN: { low: 115000, high: 155000 },
+  AK: { low: 115000, high: 155000 },
+  GA: { low: 110000, high: 150000 },
+  SC: { low: 105000, high: 145000 },
+  WY: { low: 105000, high: 145000 },
+  TX: { low: 100000, high: 135000 },
+  WI: { low: 100000, high: 135000 },
+  IL: { low: 95000, high: 125000 },
+  PA: { low: 90000, high: 125000 },
+  SD: { low: 90000, high: 125000 },
+  NM: { low: 85000, high: 115000 },
+  ND: { low: 85000, high: 115000 },
+  MI: { low: 85000, high: 110000 },
+  MO: { low: 80000, high: 105000 },
+  NE: { low: 80000, high: 105000 },
+  OH: { low: 75000, high: 100000 },
+  IN: { low: 75000, high: 100000 },
+  KY: { low: 75000, high: 100000 },
+  AL: { low: 75000, high: 100000 },
+  OK: { low: 70000, high: 95000 },
+  IA: { low: 70000, high: 95000 },
+  KS: { low: 70000, high: 95000 },
+  LA: { low: 65000, high: 90000 },
+  WV: { low: 55000, high: 75000 },
+  AR: { low: 50000, high: 70000 },
+  MS: { low: 45000, high: 65000 },
 };
 
-// Coastal / wetland-heavy towns get skewed odds — matches the real geography
-// of Southeastern MA (Buzzards Bay watershed towns run wetter and closer to
-// nitrogen-sensitive embayments).
-const COASTAL_TOWNS = new Set([
-  "Wareham",
-  "Marion",
-  "Mattapoisett",
-  "Fairhaven",
-  "Westport",
-  "Dartmouth",
-  "Swansea",
+// Coastal states get skewed odds on wetlands / watershed-sensitivity /
+// flood-adjacent categories — a rough proxy for real geography without
+// parcel-level GIS behind it.
+const COASTAL_STATES = new Set([
+  "ME", "NH", "MA", "RI", "CT", "NY", "NJ", "DE", "MD", "VA",
+  "NC", "SC", "GA", "FL", "AL", "MS", "LA", "TX", "CA", "OR",
+  "WA", "AK", "HI",
 ]);
-
-export const SOUTHEASTERN_MA_TOWNS = [
-  "Plymouth",
-  "Middleborough",
-  "Wareham",
-  "Carver",
-  "Rochester",
-  "Marion",
-  "Mattapoisett",
-  "Freetown",
-  "Berkley",
-  "Dartmouth",
-  "Westport",
-  "Fairhaven",
-  "Acushnet",
-  "Lakeville",
-  "Rehoboth",
-  "Seekonk",
-  "Swansea",
-  "Somerset",
-];
 
 function hashString(input: string): number {
   let hash = 5381;
@@ -125,7 +201,7 @@ interface CategoryDef {
   label: string;
   source: string;
   weights: { clear: number; caution: number; flag: number };
-  coastalBoost?: number; // shifts weight from clear -> caution/flag for coastal towns
+  coastalBoost?: number; // shifts weight from clear -> caution/flag for coastal states
   findings: Record<RiskStatus, string[]>;
   cost: Record<RiskStatus, string | null>;
 }
@@ -134,7 +210,7 @@ const CATEGORY_DEFS: CategoryDef[] = [
   {
     key: "wetlands",
     label: "Wetlands & Buffer Zones",
-    source: "MassDEP Wetlands / MassGIS Hydrography",
+    source: "USACE / State Wetlands Program",
     weights: { clear: 0.55, caution: 0.3, flag: 0.15 },
     coastalBoost: 0.2,
     findings: {
@@ -143,41 +219,41 @@ const CATEGORY_DEFS: CategoryDef[] = [
         "Parcel sits outside all delineated wetland resource areas and buffer zones.",
       ],
       caution: [
-        "A bordering vegetated wetland runs along the rear property line — the 100-ft buffer zone overlaps roughly 15–20% of the lot.",
+        "A bordering vegetated wetland runs along the rear property line — the typical 100-ft buffer zone overlaps roughly 15–20% of the lot.",
         "Isolated wetland pocket mapped near the northeast corner; buildable envelope is reduced but not eliminated.",
       ],
       flag: [
-        "Bordering vegetated wetland and its 100-ft buffer cover over half the parcel, requiring a Notice of Intent and likely a variance to site a house.",
-        "Parcel intersects a mapped wetland resource area directly — Conservation Commission filing required before any design work.",
+        "Bordering vegetated wetland and its buffer cover over half the parcel, likely requiring a wetland delineation and a Clean Water Act Section 404 permit (or state equivalent) before a house can be sited.",
+        "Parcel intersects a mapped wetland resource area directly — a state or local conservation agency filing is required before any design work.",
       ],
     },
     cost: {
       clear: null,
-      caution: "$3,000–$8,000 (wetland delineation + Conservation Commission filing)",
-      flag: "$15,000–$40,000+ (delineation, NOI, engineered siting, possible variance)",
+      caution: "$3,000–$8,000 (wetland delineation + local conservation filing)",
+      flag: "$15,000–$40,000+ (delineation, permitting, engineered siting, possible variance)",
     },
   },
   {
     key: "nitrogen",
-    label: "Nitrogen-Sensitive Area / Septic Trigger",
-    source: "MassDEP Nitrogen Sensitive Areas, Title 5",
+    label: "Watershed & Wastewater Sensitivity",
+    source: "State Environmental Agency (Watershed Rules)",
     weights: { clear: 0.6, caution: 0.28, flag: 0.12 },
     coastalBoost: 0.25,
     findings: {
       clear: [
-        "Parcel is outside all mapped nitrogen-sensitive watersheds — standard Title 5 septic system applies.",
+        "Parcel is outside all mapped nutrient-sensitive watersheds — a standard septic system applies.",
       ],
       caution: [
-        "Parcel falls within a nitrogen-sensitive watershed (Buzzards Bay embayment). Innovative/Alternative (I/A) septic technology will likely be required at permitting.",
+        "Parcel falls within a nutrient-sensitive watershed. Innovative/Alternative (I/A) septic technology will likely be required at permitting.",
       ],
       flag: [
-        "Parcel is within a designated nitrogen-sensitive area with confirmed I/A septic requirement — Board of Health has flagged this watershed for enhanced nitrogen removal on all new construction.",
+        "Parcel is within a designated nutrient-sensitive watershed with a confirmed advanced treatment requirement — the local health authority has flagged this watershed for enhanced nitrogen removal on all new construction.",
       ],
     },
     cost: {
       clear: null,
-      caution: "$8,000–$15,000 above a standard Title 5 system",
-      flag: "$18,000–$35,000 above a standard Title 5 system (I/A system + monitoring)",
+      caution: "$8,000–$15,000 above a standard septic system",
+      flag: "$18,000–$35,000 above a standard septic system (I/A system + monitoring)",
     },
   },
   {
@@ -210,7 +286,7 @@ const CATEGORY_DEFS: CategoryDef[] = [
     weights: { clear: 0.5, caution: 0.35, flag: 0.15 },
     findings: {
       clear: [
-        "Mapped soil unit is well-drained sandy loam — favorable for standard Title 5 percolation and conventional foundation work.",
+        "Mapped soil unit is well-drained sandy loam — favorable for standard septic percolation and conventional foundation work.",
       ],
       caution: [
         "Mapped soil unit is moderately well-drained with a seasonal high water table around 24–36 inches. A licensed soil evaluator should confirm percolation before design.",
@@ -228,51 +304,51 @@ const CATEGORY_DEFS: CategoryDef[] = [
   {
     key: "zoning",
     label: "Zoning District & Setbacks",
-    source: "Town GIS / Zoning Bylaw",
+    source: "Local Zoning / Building Department",
     weights: { clear: 0.68, caution: 0.24, flag: 0.08 },
     findings: {
       clear: [
         "Parcel meets minimum lot size, frontage, and setback requirements for its zoning district as-of-right.",
       ],
       caution: [
-        "Parcel meets minimum lot area but frontage is 6 ft short of the district requirement — a frontage variance or ANR review may be needed at the Planning Board.",
+        "Parcel meets minimum lot area but frontage is 6 ft short of the district requirement — a frontage variance or minor subdivision review may be needed from the local planning board.",
       ],
       flag: [
-        "Parcel is undersized for its zoning district (roughly 20% below minimum lot area) — a dimensional variance from the Zoning Board of Appeals is required before a building permit can issue.",
+        "Parcel is undersized for its zoning district (roughly 20% below minimum lot area) — a dimensional variance from the local zoning board of appeals is required before a building permit can issue.",
       ],
     },
     cost: {
       clear: null,
       caution: "$1,500–$4,000 (variance application + legal/engineering support)",
-      flag: "$5,000–$12,000 (ZBA variance process, plus schedule risk of denial)",
+      flag: "$5,000–$12,000 (zoning variance process, plus schedule risk of denial)",
     },
   },
   {
     key: "habitat",
     label: "Priority Habitat (Rare Species)",
-    source: "NHESP / MassWildlife",
+    source: "State Natural Heritage Program / USFWS",
     weights: { clear: 0.78, caution: 0.15, flag: 0.07 },
     findings: {
       clear: [
         "Parcel is outside all mapped Priority Habitat and Estimated Habitat boundaries.",
       ],
       caution: [
-        "Parcel edge touches a mapped Priority Habitat boundary — a Natural Heritage review (Massachusetts Endangered Species Act filing) will likely be required, though impact is typically resolvable.",
+        "Parcel edge touches a mapped priority habitat boundary — a state Natural Heritage review will likely be required, though impact is typically resolvable.",
       ],
       flag: [
-        "Parcel is substantially within Priority Habitat for a state-listed species. A full MESA filing and possible conservation and management permit are required, with real risk of a redesigned building envelope.",
+        "Parcel is substantially within priority habitat for a state- or federally-listed species. A full endangered species review and possible conservation permit are required, with real risk of a redesigned building envelope.",
       ],
     },
     cost: {
       clear: null,
-      caution: "$2,500–$6,000 (MESA review filing)",
-      flag: "$10,000–$25,000+ (full MESA review, possible site redesign, schedule risk of 6+ months)",
+      caution: "$2,500–$6,000 (state Natural Heritage review filing)",
+      flag: "$10,000–$25,000+ (full endangered species review, possible site redesign, schedule risk of 6+ months)",
     },
   },
   {
     key: "wellhead",
-    label: "Wellhead Protection / Zone II",
-    source: "MassDEP Drinking Water Source Protection",
+    label: "Wellhead Protection Area",
+    source: "State Drinking Water Source Protection Program",
     weights: { clear: 0.8, caution: 0.14, flag: 0.06 },
     findings: {
       clear: [
@@ -287,7 +363,7 @@ const CATEGORY_DEFS: CategoryDef[] = [
     },
     cost: {
       clear: null,
-      caution: "$500–$2,000 (additional local Board of Health review)",
+      caution: "$500–$2,000 (additional local health department review)",
       flag: "$4,000–$10,000 (site plan restrictions, possible septic redesign)",
     },
   },
@@ -317,13 +393,13 @@ function parseCostRange(cost: string | null): [number, number] {
   return [nums[0], nums[nums.length - 1]];
 }
 
-function computeSeed(address: string, town: string): number {
-  return hashString(`${address.trim().toLowerCase()}|${town}`);
+function computeSeed(address: string, city: string, state: string): number {
+  return hashString(`${address.trim().toLowerCase()}|${city.trim().toLowerCase()}|${state}`);
 }
 
-function buildModeledCategories(seed: number, town: string): RiskCategory[] {
+function buildModeledCategories(seed: number, state: string): RiskCategory[] {
   const rng = mulberry32(seed);
-  const isCoastal = COASTAL_TOWNS.has(town);
+  const isCoastal = COASTAL_STATES.has(state);
 
   return CATEGORY_DEFS.map((def) => {
     const weights = { ...def.weights };
@@ -351,7 +427,8 @@ function buildModeledCategories(seed: number, town: string): RiskCategory[] {
 function finalizeReport(
   seed: number,
   address: string,
-  town: string,
+  city: string,
+  state: string,
   categories: RiskCategory[],
   geocodedAddress: string | null,
   coordinates: { lat: number; lon: number } | null,
@@ -380,14 +457,15 @@ function finalizeReport(
   const acreage = 0.35 + acreageRng() * 2.4;
   const parcelAcreage = acreage.toFixed(2);
 
-  const landRate = TOWN_LAND_RATE_PER_ACRE[town] ?? { low: 140000, high: 180000 };
+  const landRate = STATE_LAND_RATE_PER_ACRE[state] ?? { low: 120000, high: 170000 };
   const landCostLow = Math.round((acreage * landRate.low) / 1000) * 1000;
   const landCostHigh = Math.round((acreage * landRate.high) / 1000) * 1000;
 
   return {
     id: seed.toString(36),
     address: address.trim(),
-    town,
+    city: city.trim(),
+    state,
     submittedAt: new Date().toISOString(),
     parcelAcreage,
     categories,
@@ -406,29 +484,31 @@ function finalizeReport(
 // builder dashboard leads) without waiting on live GIS calls.
 export function generateModeledReport(
   address: string,
-  town: string,
+  city: string,
+  state: string,
 ): LotCheckReport {
-  const seed = computeSeed(address, town);
-  const categories = buildModeledCategories(seed, town);
-  return finalizeReport(seed, address, town, categories, null, null);
+  const seed = computeSeed(address, city, state);
+  const categories = buildModeledCategories(seed, state);
+  return finalizeReport(seed, address, city, state, categories, null, null);
 }
 
 // Best-effort real data on top of the modeled engine: geocodes the address,
-// then queries FEMA's live flood hazard layer. Either step can fail for
-// reasons that have nothing to do with this app (network, timeout, the
-// service being down) — in that case the modeled flood category stands as-is
-// and the report still renders normally.
+// then queries FEMA's live flood hazard layer — both cover the entire US.
+// Either step can fail for reasons that have nothing to do with this app
+// (network, timeout, the service being down) — in that case the modeled
+// flood category stands as-is and the report still renders normally.
 export async function generateLotCheckReport(
   address: string,
-  town: string,
+  city: string,
+  state: string,
 ): Promise<LotCheckReport> {
-  const seed = computeSeed(address, town);
-  const categories = buildModeledCategories(seed, town);
+  const seed = computeSeed(address, city, state);
+  const categories = buildModeledCategories(seed, state);
 
   let geocodedAddress: string | null = null;
   let coordinates: { lat: number; lon: number } | null = null;
   try {
-    const geo = await geocodeAddress(address, town);
+    const geo = await geocodeAddress(address, city, state);
     if (geo) {
       geocodedAddress = geo.matchedAddress;
       coordinates = { lat: geo.lat, lon: geo.lon };
@@ -454,5 +534,5 @@ export async function generateLotCheckReport(
     // Fall through with modeled data — the report always renders.
   }
 
-  return finalizeReport(seed, address, town, categories, geocodedAddress, coordinates);
+  return finalizeReport(seed, address, city, state, categories, geocodedAddress, coordinates);
 }

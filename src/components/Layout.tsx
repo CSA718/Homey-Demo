@@ -86,7 +86,7 @@ export default function Layout() {
                 <span className="font-serif text-lg text-ink">Homey</span>
               </div>
               <p className="mt-3 max-w-xs text-sm text-ink-soft">
-                Home building made easy. Serving Southeastern Massachusetts.
+                Home building made easy. Now serving all 50 states.
               </p>
             </div>
             <div>

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SOUTHEASTERN_MA_TOWNS } from "../lib/lotCheck";
+import { US_STATES } from "../lib/lotCheck";
 import { BUILD_TIERS, type BuildTier } from "../lib/budgetFit";
 
 export default function LotCheck() {
   const navigate = useNavigate();
   const [address, setAddress] = useState("");
-  const [town, setTown] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [email, setEmail] = useState("");
   const [budget, setBudget] = useState("");
   const [sqft, setSqft] = useState("2400");
@@ -14,11 +15,12 @@ export default function LotCheck() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!address.trim() || !town || !budget || !sqft) return;
+    if (!address.trim() || !city.trim() || !state || !budget || !sqft) return;
     const params = new URLSearchParams({
       type: "lotcheck",
       address,
-      town,
+      city,
+      state,
       email,
       budget,
       sqft,
@@ -36,11 +38,11 @@ export default function LotCheck() {
         Find out if a lot is buildable — and if your budget covers it.
       </h1>
       <p className="mt-4 text-ink-soft">
-        Enter the parcel address and town, plus what you're planning to
-        spend. We'll geocode it, check it live against FEMA's flood hazard
-        data, screen it against wetlands, soil, zoning, priority habitat, and
-        wellhead protection data — and compare your budget against a
-        realistic estimated build cost for this lot.
+        Enter the parcel address, city, and state — anywhere in the U.S. —
+        plus what you're planning to spend. We'll geocode it, check it live
+        against FEMA's flood hazard data, screen it against wetlands, soil,
+        zoning, priority habitat, and wellhead protection data — and compare
+        your budget against a realistic estimated build cost for this lot.
       </p>
 
       <form
@@ -62,26 +64,42 @@ export default function LotCheck() {
           />
         </div>
 
-        <div>
-          <label htmlFor="town" className="block text-sm font-medium text-ink">
-            Town
-          </label>
-          <select
-            id="town"
-            required
-            value={town}
-            onChange={(e) => setTown(e.target.value)}
-            className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-          >
-            <option value="" disabled>
-              Select a town
-            </option>
-            {SOUTHEASTERN_MA_TOWNS.map((t) => (
-              <option key={t} value={t}>
-                {t}
+        <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
+          <div>
+            <label htmlFor="city" className="block text-sm font-medium text-ink">
+              City
+            </label>
+            <input
+              id="city"
+              type="text"
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g. Wareham"
+              className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+            />
+          </div>
+          <div>
+            <label htmlFor="state" className="block text-sm font-medium text-ink">
+              State
+            </label>
+            <select
+              id="state"
+              required
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+            >
+              <option value="" disabled>
+                Select
               </option>
-            ))}
-          </select>
+              {US_STATES.map((s) => (
+                <option key={s.code} value={s.code}>
+                  {s.code}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div>

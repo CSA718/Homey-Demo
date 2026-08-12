@@ -1,10 +1,11 @@
 const DATA_SOURCES = [
-  { name: "MassGIS", detail: "Parcel geometry, land use, statewide layers" },
-  { name: "MassDEP", detail: "Wetlands, nitrogen-sensitive areas, wellhead protection" },
-  { name: "FEMA", detail: "National Flood Hazard Layer" },
-  { name: "USDA NRCS", detail: "Soil survey & drainage classification" },
-  { name: "Town GIS & bylaws", detail: "Zoning districts, setbacks, frontage" },
-  { name: "NHESP", detail: "Priority & estimated habitat for state-listed species" },
+  { name: "US Census Bureau", detail: "Address geocoding, nationwide" },
+  { name: "FEMA", detail: "National Flood Hazard Layer, nationwide" },
+  { name: "USDA NRCS", detail: "Soil survey & drainage classification, nationwide" },
+  { name: "USACE / State Wetlands Programs", detail: "Wetlands & buffer zones" },
+  { name: "State Environmental Agencies", detail: "Watershed & wastewater sensitivity, wellhead protection" },
+  { name: "Local Zoning & Building Departments", detail: "Zoning districts, setbacks, frontage" },
+  { name: "State Natural Heritage Programs / USFWS", detail: "Priority & estimated habitat for listed species" },
 ];
 
 const STEPS = [

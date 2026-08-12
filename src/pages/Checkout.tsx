@@ -25,7 +25,8 @@ export default function Checkout() {
 
   // Lot Check params
   const address = params.get("address") ?? "";
-  const town = params.get("town") ?? "";
+  const city = params.get("city") ?? "";
+  const state = params.get("state") ?? "";
   const lotCheckEmail = params.get("email") ?? "";
   const budget = params.get("budget") ?? "";
   const sqft = params.get("sqft") ?? "";
@@ -45,7 +46,7 @@ export default function Checkout() {
   const title = type === "lotcheck" ? "Lot Check" : "Homey Membership";
   const subtitle =
     type === "lotcheck"
-      ? `${address}, ${town}, MA`
+      ? `${address}, ${city}, ${state}`
       : "Flat rate, billed monthly";
 
   function handleSubmit(e: React.FormEvent) {
@@ -75,7 +76,8 @@ export default function Checkout() {
       }
       const reportParams = new URLSearchParams({
         address,
-        town,
+        city,
+        state,
         budget,
         sqft,
         tier: buildTier,
@@ -84,7 +86,7 @@ export default function Checkout() {
     }, 1600);
   }
 
-  if (type === "lotcheck" && (!address.trim() || !town)) {
+  if (type === "lotcheck" && (!address.trim() || !city.trim() || !state)) {
     return (
       <div className="mx-auto max-w-lg px-6 py-24 text-center">
         <p className="text-ink-soft">Missing lot details.</p>

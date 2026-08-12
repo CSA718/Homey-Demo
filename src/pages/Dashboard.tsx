@@ -123,7 +123,7 @@ export default function Dashboard() {
                 </td>
                 <td className="px-5 py-4 text-ink-soft">
                   {lead.report.address}
-                  <p className="text-xs">{lead.report.town}, MA</p>
+                  <p className="text-xs">{lead.report.city}, {lead.report.state}</p>
                 </td>
                 <td className="px-5 py-4">
                   <VerdictBadge verdict={lead.report.verdict} label={lead.report.verdictLabel} />

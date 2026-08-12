@@ -7,18 +7,19 @@ import ReportView from "../components/ReportView";
 const SCAN_STEPS = [
   { label: "Geocoding address (US Census Bureau)", live: true },
   { label: "Querying FEMA flood hazard layer", live: true },
-  { label: "MassDEP wetlands & hydrography model", live: false },
-  { label: "Nitrogen-sensitive watershed model", live: false },
+  { label: "Wetlands & hydrography model", live: false },
+  { label: "Watershed & wastewater sensitivity model", live: false },
   { label: "USDA NRCS soil survey model", live: false },
-  { label: "Town zoning & setback model", live: false },
-  { label: "NHESP priority habitat model", live: false },
-  { label: "MassDEP wellhead protection model", live: false },
+  { label: "Local zoning & setback model", live: false },
+  { label: "State priority habitat model", live: false },
+  { label: "Wellhead protection model", live: false },
 ];
 
 export default function Report() {
   const [params] = useSearchParams();
   const address = params.get("address") ?? "";
-  const town = params.get("town") ?? "";
+  const city = params.get("city") ?? "";
+  const state = params.get("state") ?? "";
   const budgetParam = params.get("budget");
   const sqftParam = params.get("sqft");
   const tierParam = params.get("tier") as BuildTier | null;
@@ -46,7 +47,7 @@ export default function Report() {
   const tickRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!address.trim() || !town) return;
+    if (!address.trim() || !city.trim() || !state) return;
     let cancelled = false;
     setReport(null);
     setScanned(0);
@@ -55,7 +56,7 @@ export default function Report() {
       setScanned((s) => (s < SCAN_STEPS.length - 1 ? s + 1 : s));
     }, 450);
 
-    generateLotCheckReport(address, town).then((result) => {
+    generateLotCheckReport(address, city, state).then((result) => {
       if (cancelled) return;
       if (tickRef.current) window.clearInterval(tickRef.current);
       setScanned(SCAN_STEPS.length);
@@ -68,9 +69,9 @@ export default function Report() {
       cancelled = true;
       if (tickRef.current) window.clearInterval(tickRef.current);
     };
-  }, [address, town]);
+  }, [address, city, state]);
 
-  if (!address.trim() || !town) {
+  if (!address.trim() || !city.trim() || !state) {
     return <Navigate to="/lot-check" replace />;
   }
 
@@ -81,7 +82,8 @@ export default function Report() {
           Screening {address}…
         </h1>
         <p className="mt-2 text-ink-soft">
-          Geocoding and querying public data sources for {town} parcel data.
+          Geocoding and querying public data sources for {city}, {state}{" "}
+          parcel data.
         </p>
         <div className="mt-10 w-full space-y-3 text-left">
           {SCAN_STEPS.map((step, i) => {

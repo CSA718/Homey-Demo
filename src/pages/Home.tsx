@@ -18,7 +18,7 @@ export default function Home() {
         <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-              Southeastern Massachusetts
+              Now nationwide — all 50 states
             </span>
             <h1 className="mt-6 font-serif text-4xl leading-tight text-ink sm:text-5xl lg:text-6xl">
               Home building, made easy.
@@ -177,10 +177,10 @@ export default function Home() {
                 Built on public data. Backed by a human.
               </h2>
               <p className="mt-4 text-paper/80">
-                Free public data — MassGIS, MassDEP, FEMA, USDA soils, town
-                GIS — queried by deterministic code, not AI. AI writes the
-                narrative and flags risk combinations. A credentialed human
-                signs every report.
+                Free public data — US Census, FEMA, USDA soils, state and
+                local records — queried by deterministic code, not AI. AI
+                writes the narrative and flags risk combinations. A
+                credentialed human signs every report.
               </p>
               <Link
                 to="/how-it-works"

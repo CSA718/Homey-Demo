@@ -13,10 +13,11 @@ const CENSUS_GEOCODER_URL =
 
 export async function geocodeAddress(
   address: string,
-  town: string,
+  city: string,
+  state: string,
   timeoutMs = 6000,
 ): Promise<GeocodeResult | null> {
-  const oneLine = `${address}, ${town}, MA`;
+  const oneLine = `${address}, ${city}, ${state}`;
   const url = `${CENSUS_GEOCODER_URL}?address=${encodeURIComponent(oneLine)}&benchmark=Public_AR_Current&format=json`;
 
   const controller = new AbortController();
