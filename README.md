@@ -17,9 +17,8 @@ Homey first, plus a dashboard for managing the leads that come back either
 way — including their own line-item cost estimator that checks a builder's
 real numbers against what the buyer can spend and finds the break-even
 margin. Buyers can also add home specifications (bedrooms, bathrooms,
-stories, garage, style, notes) and see a concept-preview panel — honestly
-labeled as a placeholder, since this demo has no AI image/video generation
-wired up.
+stories, garage, style, notes) and see an illustrative floor plan computed
+from those actual inputs, right on the report.
 
 ## What's real vs. simulated
 
@@ -86,13 +85,16 @@ wired up.
   compute a break-even markup percentage and a turnaround-time suggestion
   factoring in size, tier, and how many flags/cautions the screening found.
   (`src/lib/costEstimate.ts`, `src/components/BuilderEstimateTool.tsx`)
-- **The AI concept video is explicitly not implemented.** There's no
-  image/video generation API wired into this demo. The "Generate concept
-  video" button on the report page is a real, working UI element that shows
-  the buyer's actual entered specs, but clicking it reveals an honest
-  placeholder message rather than faking a result — the alternative would
-  be showing buyers something that looks personalized but isn't.
-  (`src/components/HouseConceptPlaceholder.tsx`)
+- **The floor plan is a real, computed layout — not a stock image.** There's
+  no image/video generation model wired into this demo, so rather than
+  faking a photorealistic render, the report computes an actual schematic
+  floor plan from the buyer's entered bedroom count, bathroom count, square
+  footage, stories, and garage size: rooms are sized and tiled to those
+  numbers with a deterministic algorithm (same inputs always produce the
+  same layout), split across floor tabs for multi-story homes, with an
+  attached garage drawn to scale. It's still illustrative — room adjacency
+  and proportions are approximated for concept purposes, not designed by an
+  architect. (`src/lib/floorPlan.ts`, `src/components/FloorPlanPreview.tsx`)
 
 ## Pages
 

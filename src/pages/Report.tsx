@@ -4,7 +4,7 @@ import { generateLotCheckReport, type LotCheckReport } from "../lib/lotCheck";
 import { computeBudgetFit, type BuildTier } from "../lib/budgetFit";
 import ReportView from "../components/ReportView";
 import ConnectWithBuilders from "../components/ConnectWithBuilders";
-import HouseConceptPlaceholder from "../components/HouseConceptPlaceholder";
+import FloorPlanPreview from "../components/FloorPlanPreview";
 
 const SCAN_STEPS = [
   { label: "Geocoding address (US Census Bureau)", live: true },
@@ -23,6 +23,8 @@ export default function Report() {
   const city = params.get("city") ?? "";
   const state = params.get("state") ?? "";
   const email = params.get("email") ?? "";
+  const budgetParam = params.get("budget");
+  const sqftParam = params.get("sqft");
   const conceptSpec = {
     bedrooms: params.get("bedrooms") ?? "",
     bathrooms: params.get("bathrooms") ?? "",
@@ -30,9 +32,8 @@ export default function Report() {
     garage: params.get("garage") ?? "",
     style: params.get("style") ?? "",
     notes: params.get("notes") ?? "",
+    sqft: sqftParam ?? "",
   };
-  const budgetParam = params.get("budget");
-  const sqftParam = params.get("sqft");
   const tierParam = params.get("tier") as BuildTier | null;
 
   const [report, setReport] = useState<LotCheckReport | null>(null);
@@ -154,7 +155,7 @@ export default function Report() {
         <ReportView report={report} budgetFit={budgetFit} />
       </div>
 
-      <HouseConceptPlaceholder spec={conceptSpec} />
+      <FloorPlanPreview spec={conceptSpec} />
 
       <ConnectWithBuilders report={report} budgetFit={budgetFit} email={email} />
 
