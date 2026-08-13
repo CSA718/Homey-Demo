@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getLeadsForAccount, type Lead } from "../lib/leads";
 import ReportView from "../components/ReportView";
+import BuilderEstimateTool from "../components/BuilderEstimateTool";
 
 export default function LeadDetail() {
   const { account } = useAuth();
@@ -40,6 +41,16 @@ export default function LeadDetail() {
             <p className="text-ink">{lead.phone}</p>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <BuilderEstimateTool
+          accountId={account.id}
+          lead={lead}
+          onSave={(builderEstimate) =>
+            setLead((prev) => (prev ? { ...prev, builderEstimate } : prev))
+          }
+        />
       </div>
 
       <div className="mt-6">

@@ -29,9 +29,6 @@ export default function Checkout() {
   const city = params.get("city") ?? "";
   const state = params.get("state") ?? "";
   const lotCheckEmail = params.get("email") ?? "";
-  const budget = params.get("budget") ?? "";
-  const sqft = params.get("sqft") ?? "";
-  const buildTier = params.get("tier") ?? "";
 
   const [businessName, setBusinessName] = useState("");
   const [serviceState, setServiceState] = useState("");
@@ -76,15 +73,8 @@ export default function Checkout() {
         navigate("/dashboard");
         return;
       }
-      const reportParams = new URLSearchParams({
-        address,
-        city,
-        state,
-        email: lotCheckEmail,
-        budget,
-        sqft,
-        tier: buildTier,
-      });
+      const reportParams = new URLSearchParams(params);
+      reportParams.delete("type");
       navigate(`/report?${reportParams.toString()}`);
     }, 1600);
   }

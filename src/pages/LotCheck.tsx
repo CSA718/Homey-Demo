@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { US_STATES } from "../lib/lotCheck";
 import { BUILD_TIERS, type BuildTier } from "../lib/budgetFit";
+import { STORY_OPTIONS, GARAGE_OPTIONS, STYLE_OPTIONS, DEFAULT_HOME_SPEC } from "../lib/homeSpec";
 
 export default function LotCheck() {
   const navigate = useNavigate();
@@ -12,6 +13,12 @@ export default function LotCheck() {
   const [budget, setBudget] = useState("");
   const [sqft, setSqft] = useState("2400");
   const [tier, setTier] = useState<BuildTier>("custom");
+  const [bedrooms, setBedrooms] = useState(DEFAULT_HOME_SPEC.bedrooms);
+  const [bathrooms, setBathrooms] = useState(DEFAULT_HOME_SPEC.bathrooms);
+  const [stories, setStories] = useState(DEFAULT_HOME_SPEC.stories);
+  const [garage, setGarage] = useState(DEFAULT_HOME_SPEC.garage);
+  const [style, setStyle] = useState(DEFAULT_HOME_SPEC.style);
+  const [notes, setNotes] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,6 +32,12 @@ export default function LotCheck() {
       budget,
       sqft,
       tier,
+      bedrooms: String(bedrooms),
+      bathrooms: String(bathrooms),
+      stories,
+      garage,
+      style,
+      notes: notes.slice(0, 300),
     });
     navigate(`/checkout?${params.toString()}`);
   }
@@ -179,6 +192,113 @@ export default function LotCheck() {
                 ))}
               </select>
             </div>
+          </div>
+        </div>
+
+        <div className="border-t border-line pt-5">
+          <p className="text-sm font-semibold text-ink">Home specifications</p>
+          <p className="mt-1 text-xs text-ink-soft">
+            Optional, but it sharpens the concept preview on your report.
+          </p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-4">
+            <div>
+              <label htmlFor="bedrooms" className="block text-sm font-medium text-ink">
+                Bedrooms
+              </label>
+              <input
+                id="bedrooms"
+                type="number"
+                min={1}
+                max={10}
+                value={bedrooms}
+                onChange={(e) => setBedrooms(Number(e.target.value) || 1)}
+                className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              />
+            </div>
+            <div>
+              <label htmlFor="bathrooms" className="block text-sm font-medium text-ink">
+                Bathrooms
+              </label>
+              <input
+                id="bathrooms"
+                type="number"
+                min={1}
+                max={10}
+                step={0.5}
+                value={bathrooms}
+                onChange={(e) => setBathrooms(Number(e.target.value) || 1)}
+                className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              />
+            </div>
+            <div>
+              <label htmlFor="stories" className="block text-sm font-medium text-ink">
+                Stories
+              </label>
+              <select
+                id="stories"
+                value={stories}
+                onChange={(e) => setStories(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              >
+                {STORY_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="garage" className="block text-sm font-medium text-ink">
+                Garage
+              </label>
+              <select
+                id="garage"
+                value={garage}
+                onChange={(e) => setGarage(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              >
+                {GARAGE_OPTIONS.map((g) => (
+                  <option key={g.value} value={g.value}>
+                    {g.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label htmlFor="style" className="block text-sm font-medium text-ink">
+              Architectural style
+            </label>
+            <select
+              id="style"
+              value={style}
+              onChange={(e) => setStyle(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+            >
+              {STYLE_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mt-4">
+            <label htmlFor="notes" className="block text-sm font-medium text-ink">
+              Anything else you have in mind{" "}
+              <span className="text-ink-soft">(optional)</span>
+            </label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              maxLength={300}
+              rows={3}
+              placeholder="e.g. open-concept kitchen, wraparound porch, home office"
+              className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+            />
           </div>
         </div>
 

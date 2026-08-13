@@ -5,6 +5,7 @@
 
 import { generateModeledReport, type LotCheckReport } from "./lotCheck";
 import { computeBudgetFit, type BudgetFit, type BuildTier } from "./budgetFit";
+import type { BuilderEstimate } from "./costEstimate";
 
 export type LeadStatus = "new" | "contacted" | "bid_sent" | "won" | "lost";
 
@@ -17,6 +18,7 @@ export interface Lead {
   createdAt: string;
   report: LotCheckReport;
   budgetFit: BudgetFit;
+  builderEstimate?: BuilderEstimate;
 }
 
 export const LEAD_STATUSES: { value: LeadStatus; label: string }[] = [
@@ -122,6 +124,18 @@ export function updateLeadStatus(
 ): Lead[] {
   const leads = getLeadsForAccount(accountId).map((lead) =>
     lead.id === leadId ? { ...lead, status } : lead,
+  );
+  localStorage.setItem(storageKey(accountId), JSON.stringify(leads));
+  return leads;
+}
+
+export function updateBuilderEstimate(
+  accountId: string,
+  leadId: string,
+  builderEstimate: BuilderEstimate,
+): Lead[] {
+  const leads = getLeadsForAccount(accountId).map((lead) =>
+    lead.id === leadId ? { ...lead, builderEstimate } : lead,
   );
   localStorage.setItem(storageKey(accountId), JSON.stringify(leads));
   return leads;
