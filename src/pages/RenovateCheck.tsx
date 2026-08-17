@@ -9,7 +9,7 @@ import {
   type RenovationScopeItem,
   type RenovationEstimate,
 } from "../lib/renovation";
-import { useRenoAuth } from "../context/RenoAuthContext";
+import { useConsumerAuth } from "../context/ConsumerAuthContext";
 import { saveCheck } from "../lib/renoChecks";
 import RenovationEstimateCard from "../components/RenovationEstimateCard";
 import PostRenovationListing from "../components/PostRenovationListing";
@@ -20,7 +20,7 @@ function defaultQuantity(unit: string) {
 }
 
 export default function RenovateCheck() {
-  const { account } = useRenoAuth();
+  const { account } = useConsumerAuth();
   const [state, setState] = useState("");
   const [homeAge, setHomeAge] = useState<HomeAge>("recent");
   const [budget, setBudget] = useState("");
@@ -107,7 +107,7 @@ export default function RenovateCheck() {
             Run another check
           </button>
           <Link
-            to="/renovate/dashboard"
+            to="/account"
             className="rounded-full border border-line px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
           >
             View saved checks

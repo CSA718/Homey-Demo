@@ -1,14 +1,16 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useRenoAuth } from "../context/RenoAuthContext";
+import { useConsumerAuth } from "../context/ConsumerAuthContext";
 import {
   getSubscriptionState,
   trialDaysLeft,
   cancelMembership,
   resumeMembership,
-} from "../lib/renoAuth";
+} from "../lib/consumerAuth";
+import { getLotChecksForAccount } from "../lib/lotCheckHistory";
 import { getChecksForAccount } from "../lib/renoChecks";
 import { getListingsForConsumer } from "../lib/renovationListings";
 import { getBidsFor } from "../lib/bids";
+import VerdictBadge from "../components/VerdictBadge";
 
 const STATUS_BADGE: Record<string, string> = {
   trialing: "bg-caution-bg text-caution border-caution/30",
@@ -20,14 +22,15 @@ function formatMoney(n: number) {
   return `$${Math.round(n).toLocaleString("en-US")}`;
 }
 
-export default function RenovateDashboard() {
-  const { account, refresh, logOut } = useRenoAuth();
+export default function Account() {
+  const { account, refresh, logOut } = useConsumerAuth();
   const navigate = useNavigate();
   if (!account) return null;
 
   const subState = getSubscriptionState(account);
   const daysLeft = trialDaysLeft(account);
-  const checks = getChecksForAccount(account.id);
+  const lotChecks = getLotChecksForAccount(account.id);
+  const renoChecks = getChecksForAccount(account.id);
   const listings = getListingsForConsumer(account.id);
 
   function handleCancel() {
@@ -45,7 +48,7 @@ export default function RenovateDashboard() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-            Renovation Check
+            Homey Membership
           </p>
           <h1 className="mt-1 font-serif text-2xl text-ink sm:text-3xl">
             Welcome back, {account.name.split(" ")[0]}
@@ -73,8 +76,8 @@ export default function RenovateDashboard() {
           </span>
           <p className="mt-2 text-sm text-ink-soft">
             {subState === "trialing" &&
-              `Your card won't be charged until your trial ends on ${new Date(account.trialEndsAt).toLocaleDateString()}.`}
-            {subState === "active" && "Billed $25/mo flat. Cancel anytime."}
+              `Your card won't be charged until your trial ends on ${new Date(account.trialEndsAt).toLocaleDateString()}. Covers unlimited Lot Checks and Renovation Checks.`}
+            {subState === "active" && "Billed $25/mo flat — unlimited Lot Checks and Renovation Checks. Cancel anytime."}
             {subState === "canceled" &&
               "You can keep running checks until the end of your current period. Resume anytime."}
           </p>
@@ -97,7 +100,62 @@ export default function RenovateDashboard() {
       </div>
 
       <div className="mt-8 flex items-center justify-between">
-        <h2 className="font-serif text-xl text-ink">Your renovation checks</h2>
+        <h2 className="font-serif text-xl text-ink">Your Lot Checks</h2>
+        <Link
+          to="/lot-check"
+          className="rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
+        >
+          New Lot Check
+        </Link>
+      </div>
+
+      {lotChecks.length === 0 ? (
+        <div className="mt-4 rounded-2xl border border-dashed border-line bg-paper-raised p-10 text-center">
+          <p className="text-ink-soft">You haven't run a Lot Check yet.</p>
+          <Link to="/lot-check" className="mt-3 inline-block font-semibold text-forest hover:underline">
+            Start your first Lot Check →
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-4 overflow-hidden rounded-2xl border border-line">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-line bg-sand/50 text-left text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Lot</th>
+                <th className="px-4 py-3">Verdict</th>
+                <th className="px-4 py-3">Budget</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lotChecks.map((c) => (
+                <tr key={c.id} className="border-b border-line last:border-0 hover:bg-sand/30">
+                  <td className="px-4 py-3">
+                    <Link to={`/account/lot-checks/${c.id}`} className="block text-ink hover:text-forest">
+                      {new Date(c.submittedAt).toLocaleDateString()}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-ink-soft">
+                    {c.report.address}
+                    <p className="text-xs">
+                      {c.report.city}, {c.report.state}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <VerdictBadge verdict={c.report.verdict} label={c.report.verdictLabel} />
+                  </td>
+                  <td className="px-4 py-3 text-ink-soft">
+                    {c.budgetFit ? formatMoney(c.budgetFit.budget) : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="mt-10 flex items-center justify-between">
+        <h2 className="font-serif text-xl text-ink">Your Renovation Checks</h2>
         <Link
           to="/renovate/check"
           className="rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
@@ -106,7 +164,7 @@ export default function RenovateDashboard() {
         </Link>
       </div>
 
-      {checks.length === 0 ? (
+      {renoChecks.length === 0 ? (
         <div className="mt-4 rounded-2xl border border-dashed border-line bg-paper-raised p-10 text-center">
           <p className="text-ink-soft">You haven't run a renovation check yet.</p>
           <Link
@@ -129,10 +187,13 @@ export default function RenovateDashboard() {
               </tr>
             </thead>
             <tbody>
-              {checks.map((c) => (
+              {renoChecks.map((c) => (
                 <tr key={c.id} className="border-b border-line last:border-0 hover:bg-sand/30">
                   <td className="px-4 py-3">
-                    <Link to={`/renovate/checks/${c.id}`} className="block text-ink hover:text-forest">
+                    <Link
+                      to={`/account/renovation-checks/${c.id}`}
+                      className="block text-ink hover:text-forest"
+                    >
                       {new Date(c.submittedAt).toLocaleDateString()}
                     </Link>
                   </td>
@@ -192,7 +253,7 @@ export default function RenovateDashboard() {
                   <tr key={l.id} className="border-b border-line last:border-0 hover:bg-sand/30">
                     <td className="px-4 py-3">
                       <Link
-                        to={`/renovate/listings/${l.id}`}
+                        to={`/account/listings/${l.id}`}
                         className="block text-ink hover:text-forest"
                       >
                         {new Date(l.createdAt).toLocaleDateString()}

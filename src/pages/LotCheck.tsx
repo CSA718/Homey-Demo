@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { US_STATES } from "../lib/lotCheck";
 import { BUILD_TIERS, type BuildTier } from "../lib/budgetFit";
 import { STORY_OPTIONS, GARAGE_OPTIONS, STYLE_OPTIONS, DEFAULT_HOME_SPEC } from "../lib/homeSpec";
+import { useConsumerAuth } from "../context/ConsumerAuthContext";
 
 export default function LotCheck() {
   const navigate = useNavigate();
+  const { account } = useConsumerAuth();
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -23,8 +25,7 @@ export default function LotCheck() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!address.trim() || !city.trim() || !state || !budget || !sqft) return;
-    const params = new URLSearchParams({
-      type: "lotcheck",
+    const fields = {
       address,
       city,
       state,
@@ -38,14 +39,18 @@ export default function LotCheck() {
       garage,
       style,
       notes: notes.slice(0, 300),
-    });
-    navigate(`/checkout?${params.toString()}`);
+    };
+    if (account) {
+      navigate(`/report?${new URLSearchParams(fields).toString()}`);
+      return;
+    }
+    navigate(`/checkout?${new URLSearchParams({ type: "consumer-trial", ...fields }).toString()}`);
   }
 
   return (
     <div className="mx-auto max-w-xl px-6 py-16 sm:py-24">
       <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-        Lot Check · $25
+        Lot Check · Included in your Homey Membership
       </span>
       <h1 className="mt-6 font-serif text-3xl text-ink sm:text-4xl">
         Find out if a lot is buildable — and if your budget covers it.
@@ -56,6 +61,8 @@ export default function LotCheck() {
         against FEMA's flood hazard data, screen it against wetlands, soil,
         zoning, priority habitat, and wellhead protection data — and compare
         your budget against a realistic estimated build cost for this lot.
+        {!account &&
+          " Unlimited Lot Checks are included in the $25/mo Homey Membership — start with a 7-day free trial."}
       </p>
 
       <form
@@ -306,7 +313,7 @@ export default function LotCheck() {
           type="submit"
           className="w-full rounded-full bg-forest px-6 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark disabled:opacity-50"
         >
-          Continue to payment — $25
+          {account ? "Run this Lot Check" : "Start free trial & run this Lot Check"}
         </button>
         <p className="text-center text-xs text-ink-soft">
           This demo uses a mocked checkout — no real payment is processed.

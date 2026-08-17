@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { useRenoAuth } from "../context/RenoAuthContext";
+import { useConsumerAuth } from "../context/ConsumerAuthContext";
 import { getListing } from "../lib/renovationListings";
 import { getBidsFor, getAcceptedBidId, acceptBid } from "../lib/bids";
 import RenovationEstimateCard from "../components/RenovationEstimateCard";
@@ -8,13 +8,13 @@ import BidList from "../components/BidList";
 
 export default function RenovateListingDetail() {
   const { listingId } = useParams();
-  const { account } = useRenoAuth();
+  const { account } = useConsumerAuth();
   const [, forceRerender] = useState(0);
   if (!account) return null;
 
   const listing = listingId ? getListing(listingId) : null;
   if (!listing || listing.consumerAccountId !== account.id) {
-    return <Navigate to="/renovate/dashboard" replace />;
+    return <Navigate to="/account" replace />;
   }
 
   const bids = getBidsFor("renovation", listing.id);
@@ -27,8 +27,8 @@ export default function RenovateListingDetail() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-      <Link to="/renovate/dashboard" className="text-sm font-medium text-forest hover:underline">
-        ← Back to your dashboard
+      <Link to="/account" className="text-sm font-medium text-forest hover:underline">
+        ← Back to your account
       </Link>
 
       <div className="mt-6 rounded-2xl border border-line bg-paper-raised p-6">

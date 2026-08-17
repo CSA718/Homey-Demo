@@ -6,6 +6,8 @@ import ReportView from "../components/ReportView";
 import ConnectWithBuilders from "../components/ConnectWithBuilders";
 import FloorPlanPreview from "../components/FloorPlanPreview";
 import ReportBids from "../components/ReportBids";
+import { useConsumerAuth } from "../context/ConsumerAuthContext";
+import { saveLotCheck } from "../lib/lotCheckHistory";
 
 const SCAN_STEPS = [
   { label: "Geocoding address (US Census Bureau)", live: true },
@@ -37,6 +39,7 @@ export default function Report() {
   };
   const tierParam = params.get("tier") as BuildTier | null;
 
+  const { account } = useConsumerAuth();
   const [report, setReport] = useState<LotCheckReport | null>(null);
 
   const budgetFit = useMemo(() => {
@@ -56,6 +59,16 @@ export default function Report() {
       report.landCostHigh,
     );
   }, [report, budgetParam, sqftParam, tierParam]);
+
+  useEffect(() => {
+    if (!account || !report) return;
+    saveLotCheck(account.id, {
+      reportParams: params.toString(),
+      report,
+      budgetFit,
+    });
+  }, [account, report, budgetFit, params]);
+
   const [scanned, setScanned] = useState(0);
   const tickRef = useRef<number | null>(null);
 

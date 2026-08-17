@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useRenoAuth } from "../context/RenoAuthContext";
+import { useConsumerAuth } from "../context/ConsumerAuthContext";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm font-medium transition-colors ${
@@ -19,7 +19,7 @@ function HomeyMark() {
 
 export default function Layout() {
   const { account, logOut } = useAuth();
-  const { account: renoAccount } = useRenoAuth();
+  const { account: consumerAccount } = useConsumerAuth();
   const navigate = useNavigate();
 
   return (
@@ -48,9 +48,9 @@ export default function Layout() {
                 Dashboard
               </NavLink>
             )}
-            {renoAccount && (
-              <NavLink to="/renovate/dashboard" className={navLinkClass}>
-                My Renovation Checks
+            {consumerAccount && (
+              <NavLink to="/account" className={navLinkClass}>
+                My Account
               </NavLink>
             )}
           </nav>
@@ -89,7 +89,7 @@ export default function Layout() {
 
       <footer className="border-t border-line bg-sand/60">
         <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="grid gap-10 md:grid-cols-4">
+          <div className="grid gap-10 md:grid-cols-3">
             <div>
               <div className="flex items-center gap-2">
                 <HomeyMark />
@@ -100,30 +100,25 @@ export default function Layout() {
               </p>
             </div>
             <div>
-              <p className="text-sm font-semibold text-ink">For Buyers</p>
+              <p className="text-sm font-semibold text-ink">For Homeowners</p>
               <ul className="mt-3 space-y-2 text-sm text-ink-soft">
                 <li>
                   <Link to="/lot-check" className="hover:text-forest">
-                    Get a Lot Check — $25
+                    Lot Check
                   </Link>
                 </li>
-                <li>
-                  <Link to="/how-it-works" className="hover:text-forest">
-                    How screening works
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-ink">Renovating?</p>
-              <ul className="mt-3 space-y-2 text-sm text-ink-soft">
                 <li>
                   <Link to="/renovate" className="hover:text-forest">
-                    Renovation Check — $25/mo, 7-day trial
+                    Renovation Check
                   </Link>
                 </li>
                 <li>
-                  <Link to="/renovate/login" className="hover:text-forest">
+                  <Link to="/renovate" className="hover:text-forest">
+                    Homey Membership — $25/mo, 7-day trial
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/account/login" className="hover:text-forest">
                     Log in
                   </Link>
                 </li>

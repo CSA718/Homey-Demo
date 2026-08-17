@@ -23,13 +23,13 @@ export default function Renovate() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            to="/checkout?type=reno-trial"
+            to="/checkout?type=consumer-trial"
             className="rounded-full bg-forest px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
           >
             Start your {TRIAL_DAYS}-day free trial
           </Link>
           <Link
-            to="/renovate/login"
+            to="/account/login"
             className="rounded-full border border-line px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
           >
             Log in
@@ -40,14 +40,14 @@ export default function Renovate() {
         </p>
       </section>
 
-      {/* Separate from home-building */}
+      {/* One membership covers both tools */}
       <section className="border-y border-line bg-sand/60">
         <div className="mx-auto max-w-6xl px-6 py-12">
           <p className="max-w-3xl text-ink-soft">
-            This is a separate membership from Lot Check — Lot Check screens
-            raw land before you build. Renovation Check is for a home you
-            already own or are buying as-is, whether it's brand new or
-            decades old, and any scope of work on it.
+            One $25/mo Homey Membership covers both tools — Lot Check
+            screens raw land before you build; Renovation Check is for a
+            home you already own or are buying as-is, brand new or decades
+            old, and any scope of work on it. Sign up once, use either.
           </p>
         </div>
       </section>
@@ -104,7 +104,7 @@ export default function Renovate() {
 
       {/* Pricing */}
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-serif text-2xl text-ink sm:text-3xl">Membership</h2>
+        <h2 className="font-serif text-2xl text-ink sm:text-3xl">Homey Membership</h2>
         <div className="mx-auto mt-8 max-w-md rounded-2xl border-2 border-clay bg-paper-raised p-8">
           <p className="text-sm font-semibold text-clay">{TRIAL_DAYS}-day free trial</p>
           <div className="mt-4 flex items-baseline gap-2">
@@ -112,14 +112,14 @@ export default function Renovate() {
             <span className="text-sm text-ink-soft">/mo after trial</span>
           </div>
           <ul className="mt-6 space-y-3 text-sm text-ink-soft">
-            <li>· Unlimited renovation checks</li>
+            <li>· Unlimited Lot Checks and renovation checks</li>
             <li>· State-adjusted, category-by-category cost breakdown</li>
             <li>· Saved history of every check you run</li>
             <li>· Works for any home — new or used, any age</li>
             <li>· Cancel anytime, no questions asked</li>
           </ul>
           <Link
-            to="/checkout?type=reno-trial"
+            to="/checkout?type=consumer-trial"
             className="mt-6 block rounded-full bg-clay px-6 py-3 text-center text-sm font-semibold text-paper transition-colors hover:bg-clay-dark"
           >
             Start your free trial
@@ -127,7 +127,7 @@ export default function Renovate() {
         </div>
         <p className="mt-6 text-center text-sm text-ink-soft">
           Already a member?{" "}
-          <Link to="/renovate/login" className="font-semibold text-forest hover:underline">
+          <Link to="/account/login" className="font-semibold text-forest hover:underline">
             Log in
           </Link>
         </p>

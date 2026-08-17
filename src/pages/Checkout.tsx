@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { signUp } from "../lib/auth";
 import { useAuth } from "../context/AuthContext";
-import { signUp as renoSignUp } from "../lib/renoAuth";
-import { useRenoAuth } from "../context/RenoAuthContext";
+import { signUp as consumerSignUp } from "../lib/consumerAuth";
+import { useConsumerAuth } from "../context/ConsumerAuthContext";
 import { US_STATES } from "../lib/lotCheck";
 
 const MEMBERSHIP_PRICE = 499;
-const RENO_PRICE = 25;
-const RENO_TRIAL_DAYS = 7;
+const CONSUMER_PRICE = 25;
+const TRIAL_DAYS = 7;
 
 function formatCardNumber(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 16);
@@ -25,22 +25,23 @@ export default function Checkout() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { refresh } = useAuth();
-  const { refresh: refreshReno } = useRenoAuth();
+  const { refresh: refreshConsumer } = useConsumerAuth();
 
-  const rawType = params.get("type");
-  const type =
-    rawType === "membership" ? "membership" : rawType === "reno-trial" ? "reno-trial" : "lotcheck";
+  const type = params.get("type") === "membership" ? "membership" : "consumer-trial";
 
-  // Lot Check params
+  // Present when checkout was reached from the Lot Check form, so the
+  // report can be generated right after signup instead of landing on the
+  // renovation tool.
   const address = params.get("address") ?? "";
   const city = params.get("city") ?? "";
   const state = params.get("state") ?? "";
-  const lotCheckEmail = params.get("email") ?? "";
+  const fromLotCheck = Boolean(address.trim() && city.trim() && state);
+  const prefillEmail = params.get("email") ?? "";
 
   const [businessName, setBusinessName] = useState("");
   const [serviceState, setServiceState] = useState("");
-  const [renoName, setRenoName] = useState("");
-  const [email, setEmail] = useState(lotCheckEmail);
+  const [consumerName, setConsumerName] = useState("");
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [cardName, setCardName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
@@ -49,15 +50,14 @@ export default function Checkout() {
   const [status, setStatus] = useState<"form" | "processing" | "error">("form");
   const [error, setError] = useState<string | null>(null);
 
-  const amount = type === "lotcheck" ? 25 : type === "reno-trial" ? RENO_PRICE : MEMBERSHIP_PRICE;
-  const title =
-    type === "lotcheck" ? "Lot Check" : type === "reno-trial" ? "Renovation Check Membership" : "Homey Membership";
+  const amount = type === "membership" ? MEMBERSHIP_PRICE : CONSUMER_PRICE;
+  const title = type === "membership" ? "Homey Builder Membership" : "Homey Membership";
   const subtitle =
-    type === "lotcheck"
-      ? `${address}, ${city}, ${state}`
-      : type === "reno-trial"
-        ? `${RENO_TRIAL_DAYS}-day free trial, then billed monthly`
-        : "Flat rate, billed monthly";
+    type === "membership"
+      ? "Flat rate, billed monthly"
+      : fromLotCheck
+        ? `${TRIAL_DAYS}-day free trial, then billed monthly — includes this Lot Check`
+        : `${TRIAL_DAYS}-day free trial, then billed monthly`;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,9 +68,8 @@ export default function Checkout() {
         setError("Fill in your business name, service area, email, and a password (4+ characters).");
         return;
       }
-    }
-    if (type === "reno-trial") {
-      if (!renoName.trim() || !email.trim() || password.length < 4) {
+    } else {
+      if (!consumerName.trim() || !email.trim() || password.length < 4) {
         setError("Fill in your name, email, and a password (4+ characters).");
         return;
       }
@@ -90,32 +89,21 @@ export default function Checkout() {
         navigate("/dashboard");
         return;
       }
-      if (type === "reno-trial") {
-        const result = renoSignUp(renoName, email, password);
-        if ("error" in result) {
-          setStatus("form");
-          setError(result.error);
-          return;
-        }
-        refreshReno();
-        navigate("/renovate/check");
+      const result = consumerSignUp(consumerName, email, password);
+      if ("error" in result) {
+        setStatus("form");
+        setError(result.error);
         return;
       }
-      const reportParams = new URLSearchParams(params);
-      reportParams.delete("type");
-      navigate(`/report?${reportParams.toString()}`);
+      refreshConsumer();
+      if (fromLotCheck) {
+        const reportParams = new URLSearchParams(params);
+        reportParams.delete("type");
+        navigate(`/report?${reportParams.toString()}`);
+        return;
+      }
+      navigate("/renovate/check");
     }, 1600);
-  }
-
-  if (type === "lotcheck" && (!address.trim() || !city.trim() || !state)) {
-    return (
-      <div className="mx-auto max-w-lg px-6 py-24 text-center">
-        <p className="text-ink-soft">Missing lot details.</p>
-        <Link to="/lot-check" className="mt-4 inline-block font-semibold text-forest hover:underline">
-          Start a Lot Check →
-        </Link>
-      </div>
-    );
   }
 
   if (status === "processing") {
@@ -123,7 +111,7 @@ export default function Checkout() {
       <div className="mx-auto flex max-w-md flex-col items-center px-6 py-32 text-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-forest" />
         <p className="mt-6 font-serif text-xl text-ink">
-          {type === "reno-trial" ? "Setting up your free trial…" : "Processing payment…"}
+          {type === "consumer-trial" ? "Setting up your free trial…" : "Processing payment…"}
         </p>
         <p className="mt-2 text-sm text-ink-soft">
           This is a demo — no real card is charged.
@@ -145,32 +133,32 @@ export default function Checkout() {
           <p className="text-sm text-ink-soft">{subtitle}</p>
         </div>
         <p className="font-serif text-2xl text-ink">
-          {type === "reno-trial" ? (
+          {type === "consumer-trial" ? (
             <>
               $0 <span className="text-sm text-ink-soft">today</span>
             </>
           ) : (
             <>
               ${amount.toLocaleString("en-US")}
-              {type === "membership" && <span className="text-sm text-ink-soft">/mo</span>}
+              <span className="text-sm text-ink-soft">/mo</span>
             </>
           )}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-        {type === "reno-trial" && (
+        {type === "consumer-trial" && (
           <>
             <div>
-              <label htmlFor="renoName" className="block text-sm font-medium text-ink">
+              <label htmlFor="consumerName" className="block text-sm font-medium text-ink">
                 Your name
               </label>
               <input
-                id="renoName"
+                id="consumerName"
                 type="text"
                 required
-                value={renoName}
-                onChange={(e) => setRenoName(e.target.value)}
+                value={consumerName}
+                onChange={(e) => setConsumerName(e.target.value)}
                 placeholder="Jordan Silva"
                 className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
               />
@@ -284,10 +272,10 @@ export default function Checkout() {
 
         <div className="border-t border-line pt-5">
           <p className="text-sm font-semibold text-ink">Card details</p>
-          {type === "reno-trial" && (
+          {type === "consumer-trial" && (
             <p className="mt-1 text-xs text-ink-soft">
-              You won't be charged today. Your card is billed ${RENO_PRICE}/mo
-              starting {RENO_TRIAL_DAYS} days from now, unless you cancel first.
+              You won't be charged today. Your card is billed ${CONSUMER_PRICE}/mo
+              starting {TRIAL_DAYS} days from now, unless you cancel first.
             </p>
           )}
           <div className="mt-3 space-y-4">
@@ -339,9 +327,9 @@ export default function Checkout() {
           type="submit"
           className="w-full rounded-full bg-forest px-6 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
         >
-          {type === "reno-trial"
-            ? `Start ${RENO_TRIAL_DAYS}-day free trial`
-            : `Pay $${amount.toLocaleString("en-US")}${type === "membership" ? "/mo" : ""}`}
+          {type === "consumer-trial"
+            ? `Start ${TRIAL_DAYS}-day free trial`
+            : `Pay $${amount.toLocaleString("en-US")}/mo`}
         </button>
         <p className="text-center text-xs text-ink-soft">
           Demo checkout. No card is validated or charged, and nothing is sent

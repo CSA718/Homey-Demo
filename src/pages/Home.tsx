@@ -33,7 +33,7 @@ export default function Home() {
                 to="/lot-check"
                 className="rounded-full bg-forest px-7 py-3.5 text-center text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
               >
-                Get a Lot Check — $25
+                Get a Lot Check — $25/mo
               </Link>
               <Link
                 to="/builders"
@@ -43,7 +43,7 @@ export default function Home() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-ink-soft">
-              48-hour turnaround. Every report reviewed and signed by a
+              7-day free trial. Every report reviewed and signed by a
               credentialed human.
             </p>
           </div>
@@ -119,6 +119,10 @@ export default function Home() {
         <h2 className="font-serif text-2xl text-ink sm:text-3xl">
           Three ways to use Homey.
         </h2>
+        <p className="mt-3 max-w-2xl text-ink-soft">
+          One $25/mo Homey Membership, 7-day free trial, covers unlimited
+          Lot Checks and Renovation Checks.
+        </p>
         <div className="mt-10 grid gap-8 lg:grid-cols-3">
           <div className="flex flex-col rounded-2xl border border-line bg-paper-raised p-8">
             <p className="text-xs font-semibold uppercase tracking-wide text-forest">
@@ -133,7 +137,7 @@ export default function Home() {
             </p>
             <div className="mt-6 flex items-baseline gap-2">
               <span className="font-serif text-3xl text-ink">$25</span>
-              <span className="text-sm text-ink-soft">· 48-hour turnaround</span>
+              <span className="text-sm text-ink-soft">/mo · 7-day free trial</span>
             </div>
             <Link
               to="/lot-check"
@@ -238,7 +242,7 @@ export default function Home() {
             to="/lot-check"
             className="rounded-full bg-forest px-8 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
           >
-            Get a Lot Check — $25
+            Get a Lot Check — $25/mo
           </Link>
           <Link
             to="/builders"

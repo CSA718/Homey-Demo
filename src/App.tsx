@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import RenoProtectedRoute from "./components/RenoProtectedRoute";
+import ConsumerProtectedRoute from "./components/ConsumerProtectedRoute";
 import Home from "./pages/Home";
 import LotCheck from "./pages/LotCheck";
 import Checkout from "./pages/Checkout";
@@ -12,12 +12,13 @@ import BuilderLogin from "./pages/BuilderLogin";
 import Dashboard from "./pages/Dashboard";
 import LeadDetail from "./pages/LeadDetail";
 import Renovate from "./pages/Renovate";
-import RenovateLogin from "./pages/RenovateLogin";
 import RenovateCheck from "./pages/RenovateCheck";
-import RenovateDashboard from "./pages/RenovateDashboard";
-import RenovateCheckDetail from "./pages/RenovateCheckDetail";
-import RenovateListingDetail from "./pages/RenovateListingDetail";
 import RenovationJobDetail from "./pages/RenovationJobDetail";
+import AccountLogin from "./pages/AccountLogin";
+import Account from "./pages/Account";
+import LotCheckHistoryDetail from "./pages/LotCheckHistoryDetail";
+import RenovationCheckDetail from "./pages/RenovationCheckDetail";
+import RenovateListingDetail from "./pages/RenovateListingDetail";
 
 function App() {
   return (
@@ -55,37 +56,45 @@ function App() {
           }
         />
         <Route path="/renovate" element={<Renovate />} />
-        <Route path="/renovate/login" element={<RenovateLogin />} />
         <Route
           path="/renovate/check"
           element={
-            <RenoProtectedRoute>
+            <ConsumerProtectedRoute>
               <RenovateCheck />
-            </RenoProtectedRoute>
+            </ConsumerProtectedRoute>
+          }
+        />
+        <Route path="/account/login" element={<AccountLogin />} />
+        <Route
+          path="/account"
+          element={
+            <ConsumerProtectedRoute>
+              <Account />
+            </ConsumerProtectedRoute>
           }
         />
         <Route
-          path="/renovate/dashboard"
+          path="/account/lot-checks/:checkId"
           element={
-            <RenoProtectedRoute>
-              <RenovateDashboard />
-            </RenoProtectedRoute>
+            <ConsumerProtectedRoute>
+              <LotCheckHistoryDetail />
+            </ConsumerProtectedRoute>
           }
         />
         <Route
-          path="/renovate/checks/:checkId"
+          path="/account/renovation-checks/:checkId"
           element={
-            <RenoProtectedRoute>
-              <RenovateCheckDetail />
-            </RenoProtectedRoute>
+            <ConsumerProtectedRoute>
+              <RenovationCheckDetail />
+            </ConsumerProtectedRoute>
           }
         />
         <Route
-          path="/renovate/listings/:listingId"
+          path="/account/listings/:listingId"
           element={
-            <RenoProtectedRoute>
+            <ConsumerProtectedRoute>
               <RenovateListingDetail />
-            </RenoProtectedRoute>
+            </ConsumerProtectedRoute>
           }
         />
       </Route>

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { logIn } from "../lib/renoAuth";
-import { useRenoAuth } from "../context/RenoAuthContext";
+import { logIn } from "../lib/consumerAuth";
+import { useConsumerAuth } from "../context/ConsumerAuthContext";
 
-export default function RenovateLogin() {
+export default function AccountLogin() {
   const navigate = useNavigate();
-  const { refresh } = useRenoAuth();
+  const { refresh } = useConsumerAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -18,17 +18,18 @@ export default function RenovateLogin() {
       return;
     }
     refresh();
-    navigate("/renovate/dashboard");
+    navigate("/account");
   }
 
   return (
     <div className="mx-auto max-w-md px-6 py-24">
       <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-        Renovation Check Login
+        Homey Membership Login
       </span>
       <h1 className="mt-6 font-serif text-3xl text-ink">Welcome back.</h1>
       <p className="mt-3 text-ink-soft">
-        Log in to run a new renovation check or see your saved ones.
+        Log in to run a Lot Check, a renovation check, or see your saved
+        history.
       </p>
 
       <form

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMatchedBuilders } from "../lib/builderDirectory";
 import { createListing } from "../lib/renovationListings";
-import type { RenoAccount } from "../lib/renoAuth";
+import type { ConsumerAccount } from "../lib/consumerAuth";
 import type { HomeAge, RenovationEstimate, RenovationScopeItem } from "../lib/renovation";
 
 export default function PostRenovationListing({
@@ -13,7 +13,7 @@ export default function PostRenovationListing({
   scope,
   estimate,
 }: {
-  account: RenoAccount;
+  account: ConsumerAccount;
   state: string;
   homeAge: HomeAge;
   budget: number;
@@ -58,7 +58,7 @@ export default function PostRenovationListing({
           matched contractor{contractors.length === 1 ? "" : "s"} in {state}.
         </p>
         <button
-          onClick={() => navigate(`/renovate/listings/${posted}`)}
+          onClick={() => navigate(`/account/listings/${posted}`)}
           className="mt-3 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
         >
           View bids
