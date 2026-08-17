@@ -1,7 +1,9 @@
 # Homey — Home Building Made Easy
 
-A demo of Homey: a home-building and home-renovation service for buyers,
-homeowners, and builders anywhere in the U.S. Consumers sign up once for
+Homey: a home-building and home-renovation service for buyers,
+homeowners, and builders anywhere in the U.S., running on a real backend
+with real accounts — the only thing not real is payment processing.
+Consumers sign up once for
 a single **Homey Membership** ($25/mo, 7-day free trial) that covers
 unlimited use of both consumer tools:
 
@@ -60,27 +62,40 @@ renovation listings) from the same dashboard and bid on either.
   category is actually administered by nationally (USACE/state wetlands
   programs, state environmental agencies, state Natural Heritage programs,
   etc). (`src/lib/lotCheck.ts`)
-- **Payments are fully mocked.** Checkout has a Stripe-style card form, but
-  no backend, no real charge, and no data leaves the browser. It handles
-  two signup types: the builder's flat $499/mo membership, and the
-  consumer's $25/mo trial (which, when reached from the Lot Check form,
-  redirects straight to that report after signup instead of a generic
-  landing page). (`src/pages/Checkout.tsx`)
-- **Builder accounts are local demo accounts.** Signup/login/leads all live
-  in `localStorage` — no server, no database. Data persists across reloads
-  in the same browser but resets if storage is cleared.
-  (`src/lib/auth.ts`, `src/lib/leads.ts`)
-- **The builder marketplace is real accounts plus seed data, and connections
-  are real.** The "Connect with a Builder" step on the report page matches
-  against builders who actually signed up in this browser (via
-  `/checkout?type=membership`, which now collects a service-area state)
-  merged with ~10 seeded sample builders spread across common states, so the
-  list is never empty. Clicking Connect on a real account writes an actual
-  lead into that builder's dashboard via `addConnectionLead` — sign up as a
-  builder in a state, then run a Lot Check in that state in the same
-  browser, and you can watch your own new lead land in your dashboard.
-  Connecting with a seed/sample builder just shows a confirmation, since
-  there's no real account behind it to deliver to.
+- **Payments are the one deliberately mocked piece.** Checkout has a
+  Stripe-style card form, but no real payment processor is wired in — no
+  card is validated or charged. Everything else about the account it
+  creates (the login, the trial/membership state, the data it can see) is
+  real. It handles two signup types: the builder's flat $499/mo
+  membership, and the consumer's $25/mo trial (which, when reached from
+  the Lot Check form, redirects straight to that report after signup
+  instead of a generic landing page). (`src/pages/Checkout.tsx`)
+- **Everything else runs on a real backend: Supabase (Postgres + Auth).**
+  Builder accounts, consumer accounts, Lot Check history, Renovation Check
+  history, renovation listings, bids, and connection leads all live in
+  real database tables, gated by row-level security policies, not
+  `localStorage`. Two people on two different devices genuinely see each
+  other's activity — a builder's bid shows up on a buyer's phone the same
+  way it shows up in this browser. Schema + policies:
+  `supabase/schema.sql`. Client + account layer: `src/lib/supabaseClient.ts`,
+  `src/lib/profile.ts`, `src/lib/auth.ts`, `src/lib/consumerAuth.ts`.
+- **A master/admin account can see everything, on any account.** Any real
+  account (consumer or builder) can be flagged `is_admin` in the database
+  (one SQL statement, see `supabase/schema.sql`), which unlocks `/admin`:
+  every account, every Lot Check, every Renovation Check, every listing,
+  every bid, across every user — not just the ones in this browser.
+  (`src/pages/Admin.tsx`, `src/lib/profile.ts`)
+- **The builder marketplace is real accounts plus seed data, and
+  connections are real.** The "Connect with a Builder" step on the report
+  page matches against builders who actually signed up anywhere (via
+  `/checkout?type=membership`, which collects a service-area state) merged
+  with ~10 seeded sample builders spread across common states, so the list
+  is never empty. Clicking Connect on a real account writes an actual lead
+  into that builder's dashboard, in the real `connection_leads` table —
+  sign up as a builder in a state, then run a Lot Check in that state from
+  any device, and the lead shows up in that builder's dashboard wherever
+  they're logged in. Connecting with a seed/sample builder just shows a
+  confirmation, since there's no real account behind it to deliver to.
   (`src/lib/builderDirectory.ts`, `src/components/ConnectWithBuilders.tsx`)
 - **Budget Fit is a real, deterministic calculation** — not looked up, but
   not hardcoded either. It sums a modeled land value (state + acreage-based
@@ -137,26 +152,26 @@ renovation listings) from the same dashboard and bid on either.
   compressed to match that real, narrower spread. A contingency percentage
   (5–22%) is added based on the home's age bracket, since older homes more
   often turn up hidden costs once work starts. (`src/lib/renovation.ts`)
-- **The consumer Homey Membership is one local demo account system
-  covering both tools**, separate from builder accounts since those are a
-  different kind of member. Signup/login, a mocked 7-day trial → $25/mo
+- **The consumer Homey Membership is one real account covering both
+  tools**, separate from builder accounts since those are a different kind
+  of member. Signup/login runs on Supabase Auth; a 7-day trial → $25/mo
   subscription state (trialing/active/canceled, computed from a stored
-  trial-end date — no real billing), and saved history for both Lot
-  Checks and Renovation Checks all live in `localStorage` under one
-  account. (`src/lib/consumerAuth.ts`, `src/lib/lotCheckHistory.ts`,
+  trial-end date — still no real billing) and saved history for both Lot
+  Checks and Renovation Checks live in Postgres under one account, visible
+  from any device that account logs into.
+  (`src/lib/consumerAuth.ts`, `src/lib/lotCheckHistory.ts`,
   `src/lib/renoChecks.ts`, `src/context/ConsumerAuthContext.tsx`)
-- **Bids and renovation listings are real, shared, cross-account data** —
-  the same "shared `localStorage` as a fake backend" pattern as builder
-  accounts, so a bid one account (a builder) submits is immediately visible
-  to the other account (a buyer or homeowner) in the same browser, even
-  though they're different logins. A Renovation Check listing is posted
+- **Bids and renovation listings are real, shared, cross-account data**,
+  enforced by row-level security rather than by trusting the browser — a
+  bid a builder submits is visible to the buyer or homeowner who posted
+  the job (and to any other builder who can already see that job), from
+  wherever each of them is logged in. A Renovation Check listing is posted
   once and is visible to every matched contractor in that state, who each
   submit their own bid; a Lot Check report can likewise collect bids from
-  every builder the buyer connected with. Buyers have no login for Lot
-  Check, so bids are looked up by the report's deterministic id (same
-  address always produces the same report and the same id) — bookmarking
-  the report URL is what lets a buyer check back for bids.
-  (`src/lib/bids.ts`, `src/lib/renovationListings.ts`,
+  every builder the buyer connected with. Since Lot Check now requires a
+  Homey Membership account, bids are tied to that account — the report
+  page also just works if you bookmark it and come back later, still
+  logged in. (`src/lib/bids.ts`, `src/lib/renovationListings.ts`,
   `src/components/BidForm.tsx`, `src/components/BidList.tsx`)
 
 ## Pages
@@ -194,10 +209,33 @@ renovation listings) from the same dashboard and bid on either.
   renovation estimate
 - `/account/listings/:listingId` — protected: a posted listing and the
   bids contractors have submitted on it, with an accept action
+- `/admin` — protected, admin-only: every account and every piece of
+  activity across the whole app, not just this browser
 
 ## Stack
 
-Vite + React + TypeScript + Tailwind CSS v4 + React Router. No backend.
+Vite + React + TypeScript + Tailwind CSS v4 + React Router + Supabase
+(Postgres + Auth).
+
+## Backend setup (Supabase)
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. Open the SQL Editor and run `supabase/schema.sql` — it creates every
+   table, row-level security policy, and the trigger that turns a signup
+   into a profile row.
+3. In **Authentication → Providers → Email**, turn off "Confirm email" so
+   signup grants an active session immediately (matches the rest of the
+   app's instant-access UX). Leave it on if you'd rather have real email
+   verification — the app handles that case too, it just won't log the
+   new account straight in.
+4. Copy the Project URL and anon public key from **Project Settings →
+   API** into `.env.local` (see `.env.example`) — or pass them as
+   `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` at build time.
+5. Sign up once on the live site (as either a consumer or a builder), then
+   run this in the SQL Editor to make that account a master/admin account:
+   ```sql
+   update public.profiles set is_admin = true where email = 'you@example.com';
+   ```
 
 ## Running locally
 

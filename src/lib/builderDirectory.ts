@@ -1,9 +1,9 @@
 // Builder directory for the buyer-facing "Connect with a Builder" step.
-// Combines a handful of seeded sample builders (so the marketplace is never
-// empty in a fresh browser) with real member accounts signed up in this
-// browser via /checkout?type=membership — so signing up as a builder and
-// then running a Lot Check in your own state actually shows your business
-// in the match list, and connecting delivers a real lead to your dashboard.
+// Combines a handful of seeded sample builders (so the marketplace is
+// never empty for a state with no coverage yet) with real member accounts
+// signed up anywhere — so signing up as a builder and running a Lot Check
+// in your own state actually shows your business in the match list, and
+// connecting delivers a real lead to your dashboard, on any device.
 
 import { getAllAccounts } from "./auth";
 
@@ -38,8 +38,9 @@ const SEED_BUILDERS: SeedBuilder[] = [
 // Returns builders matched to a state — exact matches first, backfilled
 // with other members if fewer than `minResults` are found in-state, so the
 // list is never empty even for a state with no local coverage yet.
-export function getMatchedBuilders(state: string, minResults = 4): DirectoryBuilder[] {
-  const realAccounts: DirectoryBuilder[] = getAllAccounts().map((a) => ({
+export async function getMatchedBuilders(state: string, minResults = 4): Promise<DirectoryBuilder[]> {
+  const accounts = await getAllAccounts();
+  const realAccounts: DirectoryBuilder[] = accounts.map((a) => ({
     id: a.id,
     businessName: a.businessName,
     state: a.state,
@@ -52,8 +53,8 @@ export function getMatchedBuilders(state: string, minResults = 4): DirectoryBuil
     isRealAccount: false,
   }));
 
-  // Real accounts first (they're actually reachable in this demo), then
-  // seeded ones, de-duplicated by state+name isn't necessary — different ids.
+  // Real accounts first (they're actually reachable), then seeded ones,
+  // de-duplicated by state+name isn't necessary — different ids.
   const all = [...realAccounts, ...seeded];
 
   const inState = all.filter((b) => b.state === state);

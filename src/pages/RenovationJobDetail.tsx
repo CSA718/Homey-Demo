@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getListing } from "../lib/renovationListings";
-import { getBidsFor, getAcceptedBidId } from "../lib/bids";
+import { getListing, type RenovationListing } from "../lib/renovationListings";
+import { getBidsFor, getAcceptedBidId, type Bid } from "../lib/bids";
 import RenovationEstimateCard from "../components/RenovationEstimateCard";
 import BidForm from "../components/BidForm";
 import BidList from "../components/BidList";
@@ -10,14 +10,38 @@ import BidList from "../components/BidList";
 export default function RenovationJobDetail() {
   const { listingId } = useParams();
   const { account } = useAuth();
-  const [, forceRerender] = useState(0);
+  const [listing, setListing] = useState<RenovationListing | null | undefined>(undefined);
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [acceptedBidId, setAcceptedBidId] = useState<string | null>(null);
+  const [bidsVersion, setBidsVersion] = useState(0);
+
+  useEffect(() => {
+    if (!listingId) return;
+    let active = true;
+    getListing(listingId).then((l) => active && setListing(l));
+    return () => {
+      active = false;
+    };
+  }, [listingId]);
+
+  useEffect(() => {
+    if (!listing) return;
+    let active = true;
+    Promise.all([getBidsFor("renovation", listing.id), getAcceptedBidId("renovation", listing.id)]).then(
+      ([b, accepted]) => {
+        if (!active) return;
+        setBids(b);
+        setAcceptedBidId(accepted);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [listing, bidsVersion]);
+
   if (!account) return null;
-
-  const listing = listingId ? getListing(listingId) : null;
-  if (!listing) return <Navigate to="/dashboard" replace />;
-
-  const bids = getBidsFor("renovation", listing.id);
-  const acceptedBidId = getAcceptedBidId("renovation", listing.id);
+  if (listing === null) return <Navigate to="/dashboard" replace />;
+  if (listing === undefined) return null;
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
@@ -48,7 +72,7 @@ export default function RenovationJobDetail() {
           targetId={listing.id}
           builderAccountId={account.id}
           builderName={account.businessName}
-          onSubmitted={() => forceRerender((n) => n + 1)}
+          onSubmitted={() => setBidsVersion((n) => n + 1)}
         />
       </div>
 

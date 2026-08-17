@@ -1,16 +1,30 @@
-import { useState } from "react";
-import { getBidsFor, getAcceptedBidId, acceptBid } from "../lib/bids";
+import { useEffect, useState } from "react";
+import { getBidsFor, getAcceptedBidId, acceptBid, type Bid } from "../lib/bids";
 
 export default function ReportBids({ reportId }: { reportId: string }) {
-  const [, forceRerender] = useState(0);
-  const bids = getBidsFor("lot-check", reportId);
-  const acceptedBidId = getAcceptedBidId("lot-check", reportId);
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [acceptedBidId, setAcceptedBidId] = useState<string | null>(null);
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([getBidsFor("lot-check", reportId), getAcceptedBidId("lot-check", reportId)]).then(
+      ([b, accepted]) => {
+        if (!active) return;
+        setBids(b);
+        setAcceptedBidId(accepted);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [reportId, version]);
 
   if (bids.length === 0) return null;
 
-  function handleAccept(bidId: string) {
-    acceptBid("lot-check", reportId, bidId);
-    forceRerender((n) => n + 1);
+  async function handleAccept(bidId: string) {
+    await acceptBid("lot-check", reportId, bidId);
+    setVersion((n) => n + 1);
   }
 
   return (

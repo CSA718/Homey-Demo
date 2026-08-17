@@ -9,7 +9,7 @@ import {
   type LeadStatus,
 } from "../lib/leads";
 import { getListingsForState, type RenovationListing } from "../lib/renovationListings";
-import { getBidsFor, getBidByBuilder } from "../lib/bids";
+import { getBidsForTargets } from "../lib/bids";
 import VerdictBadge from "../components/VerdictBadge";
 
 const HOURS_PER_BID = 8;
@@ -37,20 +37,66 @@ export default function Dashboard() {
   const { account, logOut } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [listings, setListings] = useState<RenovationListing[]>([]);
+  const [myLotCheckBidIds, setMyLotCheckBidIds] = useState<Set<string>>(new Set());
+  const [myRenovationBidIds, setMyRenovationBidIds] = useState<Set<string>>(new Set());
+  const [renovationBidCounts, setRenovationBidCounts] = useState<Record<string, number>>({});
   const [tab, setTab] = useState<"leads" | "renovation">("leads");
 
   useEffect(() => {
-    if (account) {
-      setLeads(getLeadsForAccount(account.id));
-      setListings(getListingsForState(account.state));
-    }
+    if (!account) return;
+    let active = true;
+    getLeadsForAccount(account.id).then((l) => active && setLeads(l));
+    getListingsForState(account.state).then((l) => active && setListings(l));
+    return () => {
+      active = false;
+    };
   }, [account]);
+
+  useEffect(() => {
+    if (!account || leads.length === 0) {
+      setMyLotCheckBidIds(new Set());
+      return;
+    }
+    let active = true;
+    getBidsForTargets(
+      "lot-check",
+      leads.map((l) => l.report.id),
+    ).then((bids) => {
+      if (!active) return;
+      setMyLotCheckBidIds(new Set(bids.filter((b) => b.builderAccountId === account.id).map((b) => b.targetId)));
+    });
+    return () => {
+      active = false;
+    };
+  }, [account, leads]);
+
+  useEffect(() => {
+    if (!account || listings.length === 0) {
+      setMyRenovationBidIds(new Set());
+      setRenovationBidCounts({});
+      return;
+    }
+    let active = true;
+    getBidsForTargets(
+      "renovation",
+      listings.map((l) => l.id),
+    ).then((bids) => {
+      if (!active) return;
+      setMyRenovationBidIds(new Set(bids.filter((b) => b.builderAccountId === account.id).map((b) => b.targetId)));
+      const counts: Record<string, number> = {};
+      for (const b of bids) counts[b.targetId] = (counts[b.targetId] ?? 0) + 1;
+      setRenovationBidCounts(counts);
+    });
+    return () => {
+      active = false;
+    };
+  }, [account, listings]);
 
   if (!account) return null;
 
-  function handleStatusChange(leadId: string, status: LeadStatus) {
+  async function handleStatusChange(leadId: string, status: LeadStatus) {
     if (!account) return;
-    setLeads(updateLeadStatus(account.id, leadId, status));
+    setLeads(await updateLeadStatus(account.id, leadId, status));
   }
 
   const wonCount = leads.filter((l) => l.status === "won").length;
@@ -70,12 +116,22 @@ export default function Dashboard() {
             Referred leads routed to you through Homey.
           </p>
         </div>
-        <button
-          onClick={logOut}
-          className="rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
-        >
-          Log out
-        </button>
+        <div className="flex items-center gap-3">
+          {account.isAdmin && (
+            <Link
+              to="/admin"
+              className="rounded-full border border-forest px-4 py-2 text-sm font-semibold text-forest transition-colors hover:bg-forest hover:text-paper"
+            >
+              Admin
+            </Link>
+          )}
+          <button
+            onClick={logOut}
+            className="rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
+          >
+            Log out
+          </button>
+        </div>
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-4">
@@ -139,7 +195,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {leads.map((lead) => {
-                  const myBid = getBidByBuilder("lot-check", lead.report.id, account.id);
+                  const myBid = myLotCheckBidIds.has(lead.report.id);
                   return (
                     <tr key={lead.id} className="border-b border-line last:border-0">
                       <td className="px-5 py-4">
@@ -223,8 +279,8 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {listings.map((listing) => {
-                  const bidCount = getBidsFor("renovation", listing.id).length;
-                  const myBid = getBidByBuilder("renovation", listing.id, account.id);
+                  const bidCount = renovationBidCounts[listing.id] ?? 0;
+                  const myBid = myRenovationBidIds.has(listing.id);
                   return (
                     <tr key={listing.id} className="border-b border-line last:border-0">
                       <td className="px-5 py-4">

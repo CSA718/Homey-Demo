@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { supabase } from "../lib/supabaseClient";
 import { getSession, logOut as logOutFn, type ConsumerAccount } from "../lib/consumerAuth";
 
 interface ConsumerAuthContextValue {
   account: ConsumerAccount | null;
+  loading: boolean;
   refresh: () => void;
   logOut: () => void;
 }
@@ -11,24 +13,39 @@ interface ConsumerAuthContextValue {
 const ConsumerAuthContext = createContext<ConsumerAuthContextValue | null>(null);
 
 export function ConsumerAuthProvider({ children }: { children: ReactNode }) {
-  const [account, setAccount] = useState<ConsumerAccount | null>(() => getSession());
+  const [account, setAccount] = useState<ConsumerAccount | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = () => {
+    getSession().then(setAccount);
+  };
 
   useEffect(() => {
-    const refresh = () => setAccount(getSession());
+    let active = true;
+    getSession().then((a) => {
+      if (active) {
+        setAccount(a);
+        setLoading(false);
+      }
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      getSession().then((a) => active && setAccount(a));
+    });
     window.addEventListener("homey-consumer-auth-change", refresh);
-    window.addEventListener("storage", refresh);
     return () => {
+      active = false;
+      sub.subscription.unsubscribe();
       window.removeEventListener("homey-consumer-auth-change", refresh);
-      window.removeEventListener("storage", refresh);
     };
   }, []);
 
   const value: ConsumerAuthContextValue = {
     account,
-    refresh: () => setAccount(getSession()),
+    loading,
+    refresh,
     logOut: () => {
-      logOutFn();
-      setAccount(null);
+      logOutFn().then(() => setAccount(null));
     },
   };
 

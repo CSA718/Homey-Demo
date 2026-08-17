@@ -1,11 +1,10 @@
-// Contractor bids — a single shared store (not scoped to one account) so a
-// bid a builder submits is visible to whichever buyer or homeowner posted
-// the job, and vice versa. Same "shared localStorage as a fake backend"
-// pattern already used for builder accounts (getAllAccounts in auth.ts).
-// Covers both target types: a Lot Check report a buyer connected with
-// builders on, and an open Renovation Check listing.
+// Contractor bids — a real, shared Postgres table (see supabase/schema.sql)
+// so a bid a builder submits is visible to whichever buyer or homeowner
+// posted the job, and vice versa, across any device. Covers both target
+// types: a Lot Check report a buyer connected with builders on, and an
+// open Renovation Check listing.
 
-import { storage } from "./storage";
+import { supabase } from "./supabaseClient";
 
 export type BidTargetType = "lot-check" | "renovation";
 
@@ -20,96 +19,138 @@ export interface Bid {
   estimatedWeeks: number;
   message: string;
   submittedAt: string;
+  accepted: boolean;
 }
 
-const BIDS_KEY = "homey_bids_v1";
-const ACCEPTED_KEY = "homey_accepted_bids_v1";
-
-function readBids(): Bid[] {
-  try {
-    const raw = storage.getItem(BIDS_KEY);
-    return raw ? (JSON.parse(raw) as Bid[]) : [];
-  } catch {
-    return [];
-  }
+interface BidRow {
+  id: string;
+  target_type: BidTargetType;
+  target_id: string;
+  builder_account_id: string;
+  builder_name: string;
+  price_low: number;
+  price_high: number;
+  estimated_weeks: number;
+  message: string;
+  submitted_at: string;
+  accepted: boolean;
 }
 
-function writeBids(bids: Bid[]) {
-  storage.setItem(BIDS_KEY, JSON.stringify(bids));
-}
-
-function readAccepted(): Record<string, string> {
-  try {
-    const raw = storage.getItem(ACCEPTED_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
-  } catch {
-    return {};
-  }
-}
-
-function acceptedKey(targetType: BidTargetType, targetId: string) {
-  return `${targetType}:${targetId}`;
-}
-
-export function submitBid(
-  input: Omit<Bid, "id" | "submittedAt">,
-): Bid {
-  const bids = readBids();
-  const existingIdx = bids.findIndex(
-    (b) =>
-      b.targetType === input.targetType &&
-      b.targetId === input.targetId &&
-      b.builderAccountId === input.builderAccountId,
-  );
-  const bid: Bid = {
-    ...input,
-    id: existingIdx >= 0 ? bids[existingIdx].id : Math.random().toString(36).slice(2, 10),
-    submittedAt: new Date().toISOString(),
+function fromRow(row: BidRow): Bid {
+  return {
+    id: row.id,
+    targetType: row.target_type,
+    targetId: row.target_id,
+    builderAccountId: row.builder_account_id,
+    builderName: row.builder_name,
+    priceLow: row.price_low,
+    priceHigh: row.price_high,
+    estimatedWeeks: row.estimated_weeks,
+    message: row.message,
+    submittedAt: row.submitted_at,
+    accepted: row.accepted,
   };
-  if (existingIdx >= 0) {
-    bids[existingIdx] = bid;
-  } else {
-    bids.push(bid);
-  }
-  writeBids(bids);
-  return bid;
 }
 
-export function getBidsFor(targetType: BidTargetType, targetId: string): Bid[] {
-  return readBids()
-    .filter((b) => b.targetType === targetType && b.targetId === targetId)
-    .sort((a, b) => a.priceLow - b.priceLow);
+export async function submitBid(
+  input: Omit<Bid, "id" | "submittedAt" | "accepted">,
+): Promise<Bid> {
+  const { data, error } = await supabase
+    .from("bids")
+    .upsert(
+      {
+        target_type: input.targetType,
+        target_id: input.targetId,
+        builder_account_id: input.builderAccountId,
+        builder_name: input.builderName,
+        price_low: input.priceLow,
+        price_high: input.priceHigh,
+        estimated_weeks: input.estimatedWeeks,
+        message: input.message,
+      },
+      { onConflict: "target_type,target_id,builder_account_id" },
+    )
+    .select("*")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Failed to submit bid");
+  return fromRow(data as BidRow);
 }
 
-export function getBidByBuilder(
+export async function getBidsFor(targetType: BidTargetType, targetId: string): Promise<Bid[]> {
+  const { data, error } = await supabase
+    .from("bids")
+    .select("*")
+    .eq("target_type", targetType)
+    .eq("target_id", targetId)
+    .order("price_low", { ascending: true });
+  if (error || !data) return [];
+  return (data as BidRow[]).map(fromRow);
+}
+
+// Every bid across a batch of targets at once (e.g. every listing on a
+// builder's jobs board) — one query instead of one per row.
+export async function getBidsForTargets(targetType: BidTargetType, targetIds: string[]): Promise<Bid[]> {
+  if (targetIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from("bids")
+    .select("*")
+    .eq("target_type", targetType)
+    .in("target_id", targetIds);
+  if (error || !data) return [];
+  return (data as BidRow[]).map(fromRow);
+}
+
+export async function getBidByBuilder(
   targetType: BidTargetType,
   targetId: string,
   builderAccountId: string,
-): Bid | null {
-  return (
-    readBids().find(
-      (b) =>
-        b.targetType === targetType &&
-        b.targetId === targetId &&
-        b.builderAccountId === builderAccountId,
-    ) ?? null
-  );
+): Promise<Bid | null> {
+  const { data, error } = await supabase
+    .from("bids")
+    .select("*")
+    .eq("target_type", targetType)
+    .eq("target_id", targetId)
+    .eq("builder_account_id", builderAccountId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return fromRow(data as BidRow);
 }
 
 // Bids a specific builder has placed, across every job — for a "your bids"
 // view on the dashboard.
-export function getBidsByBuilder(builderAccountId: string): Bid[] {
-  return readBids()
-    .filter((b) => b.builderAccountId === builderAccountId)
-    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+export async function getBidsByBuilder(builderAccountId: string): Promise<Bid[]> {
+  const { data, error } = await supabase
+    .from("bids")
+    .select("*")
+    .eq("builder_account_id", builderAccountId)
+    .order("submitted_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as BidRow[]).map(fromRow);
 }
 
-export function acceptBid(targetType: BidTargetType, targetId: string, bidId: string) {
-  const accepted = readAccepted();
-  accepted[acceptedKey(targetType, targetId)] = bidId;
-  storage.setItem(ACCEPTED_KEY, JSON.stringify(accepted));
+// Admin-only: every bid across every target.
+export async function listAllBids(): Promise<Bid[]> {
+  const { data, error } = await supabase.from("bids").select("*").order("submitted_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as BidRow[]).map(fromRow);
 }
 
-export function getAcceptedBidId(targetType: BidTargetType, targetId: string): string | null {
-  return readAccepted()[acceptedKey(targetType, targetId)] ?? null;
+export async function acceptBid(targetType: BidTargetType, targetId: string, bidId: string): Promise<void> {
+  await supabase
+    .from("bids")
+    .update({ accepted: false })
+    .eq("target_type", targetType)
+    .eq("target_id", targetId);
+  await supabase.from("bids").update({ accepted: true }).eq("id", bidId);
+}
+
+export async function getAcceptedBidId(targetType: BidTargetType, targetId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("bids")
+    .select("id")
+    .eq("target_type", targetType)
+    .eq("target_id", targetId)
+    .eq("accepted", true)
+    .maybeSingle();
+  return (data as { id: string } | null)?.id ?? null;
 }

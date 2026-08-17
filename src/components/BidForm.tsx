@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { submitBid, getBidByBuilder, type BidTargetType } from "../lib/bids";
+import { useEffect, useState } from "react";
+import { submitBid, getBidByBuilder, type Bid, type BidTargetType } from "../lib/bids";
 
 export default function BidForm({
   targetType,
@@ -14,17 +14,32 @@ export default function BidForm({
   builderName: string;
   onSubmitted: () => void;
 }) {
-  const existing = getBidByBuilder(targetType, targetId, builderAccountId);
-  const [priceLow, setPriceLow] = useState(existing ? String(existing.priceLow) : "");
-  const [priceHigh, setPriceHigh] = useState(existing ? String(existing.priceHigh) : "");
-  const [estimatedWeeks, setEstimatedWeeks] = useState(
-    existing ? String(existing.estimatedWeeks) : "",
-  );
-  const [message, setMessage] = useState(existing?.message ?? "");
+  const [existing, setExisting] = useState<Bid | null>(null);
+  const [priceLow, setPriceLow] = useState("");
+  const [priceHigh, setPriceHigh] = useState("");
+  const [estimatedWeeks, setEstimatedWeeks] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    let active = true;
+    getBidByBuilder(targetType, targetId, builderAccountId).then((bid) => {
+      if (!active) return;
+      setExisting(bid);
+      if (bid) {
+        setPriceLow(String(bid.priceLow));
+        setPriceHigh(String(bid.priceHigh));
+        setEstimatedWeeks(String(bid.estimatedWeeks));
+        setMessage(bid.message);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [targetType, targetId, builderAccountId]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const low = Number(priceLow);
     const high = Number(priceHigh);
@@ -34,7 +49,7 @@ export default function BidForm({
       return;
     }
     setError(null);
-    submitBid({
+    await submitBid({
       targetType,
       targetId,
       builderAccountId,

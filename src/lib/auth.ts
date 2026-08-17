@@ -1,9 +1,15 @@
-// Local "demo accounts" for builder membership — no backend, no database.
-// Everything lives in localStorage. The password hash below is a simple
-// non-cryptographic checksum, adequate only because this data never leaves
-// the browser; it is not a real auth system.
+// Builder/contractor accounts — real accounts backed by Supabase Auth,
+// shared across every device (see src/lib/profile.ts for the underlying
+// account layer, and supabase/schema.sql for the schema + RLS).
 
-import { storage } from "./storage";
+import {
+  signUpWithProfile,
+  logInWithProfile,
+  logOut as logOutProfile,
+  getCurrentProfile,
+  listProfilesByRole,
+  type Profile,
+} from "./profile";
 
 export interface BuilderAccount {
   id: string;
@@ -11,96 +17,62 @@ export interface BuilderAccount {
   email: string;
   state: string;
   createdAt: string;
+  isAdmin: boolean;
 }
 
-interface StoredAccount extends BuilderAccount {
-  passwordHash: string;
+function toBuilderAccount(profile: Profile): BuilderAccount {
+  return {
+    id: profile.id,
+    businessName: profile.name,
+    email: profile.email,
+    state: profile.state ?? "",
+    createdAt: profile.createdAt,
+    isAdmin: profile.isAdmin,
+  };
 }
 
-const ACCOUNTS_KEY = "homey_demo_accounts";
-const SESSION_KEY = "homey_demo_session";
-
-function hashPassword(password: string): string {
-  let hash = 5381;
-  for (let i = 0; i < password.length; i++) {
-    hash = (hash * 33) ^ password.charCodeAt(i);
-  }
-  return (hash >>> 0).toString(36);
-}
-
-function readAccounts(): StoredAccount[] {
-  try {
-    const raw = storage.getItem(ACCOUNTS_KEY);
-    return raw ? (JSON.parse(raw) as StoredAccount[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeAccounts(accounts: StoredAccount[]) {
-  storage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-}
-
-function toPublic(account: StoredAccount): BuilderAccount {
-  const { passwordHash: _passwordHash, ...pub } = account;
-  return pub;
-}
-
-export function signUp(
+export async function signUp(
   businessName: string,
   email: string,
   password: string,
   state: string,
-): { account: BuilderAccount } | { error: string } {
-  const normalizedEmail = email.trim().toLowerCase();
-  const accounts = readAccounts();
-  if (accounts.some((a) => a.email === normalizedEmail)) {
-    return { error: "An account with that email already exists. Try logging in instead." };
-  }
-  const account: StoredAccount = {
-    id: Math.random().toString(36).slice(2, 10),
-    businessName: businessName.trim(),
-    email: normalizedEmail,
+): Promise<{ account: BuilderAccount } | { pendingConfirmation: true } | { error: string }> {
+  const result = await signUpWithProfile({
+    email,
+    password,
+    role: "builder",
+    name: businessName,
     state,
-    createdAt: new Date().toISOString(),
-    passwordHash: hashPassword(password),
-  };
-  accounts.push(account);
-  writeAccounts(accounts);
-  storage.setItem(SESSION_KEY, account.id);
+  });
+  if ("error" in result || "pendingConfirmation" in result) return result;
   window.dispatchEvent(new Event("homey-auth-change"));
-  return { account: toPublic(account) };
+  return { account: toBuilderAccount(result.profile) };
 }
 
-export function logIn(
+export async function logIn(
   email: string,
   password: string,
-): { account: BuilderAccount } | { error: string } {
-  const normalizedEmail = email.trim().toLowerCase();
-  const accounts = readAccounts();
-  const account = accounts.find((a) => a.email === normalizedEmail);
-  if (!account || account.passwordHash !== hashPassword(password)) {
-    return { error: "No account matches that email and password." };
-  }
-  storage.setItem(SESSION_KEY, account.id);
+): Promise<{ account: BuilderAccount } | { error: string }> {
+  const result = await logInWithProfile(email, password, "builder");
+  if ("error" in result) return result;
   window.dispatchEvent(new Event("homey-auth-change"));
-  return { account: toPublic(account) };
+  return { account: toBuilderAccount(result.profile) };
 }
 
-export function logOut() {
-  storage.removeItem(SESSION_KEY);
+export async function logOut(): Promise<void> {
+  await logOutProfile();
   window.dispatchEvent(new Event("homey-auth-change"));
 }
 
-export function getSession(): BuilderAccount | null {
-  const id = storage.getItem(SESSION_KEY);
-  if (!id) return null;
-  const account = readAccounts().find((a) => a.id === id);
-  return account ? toPublic(account) : null;
+export async function getSession(): Promise<BuilderAccount | null> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "builder") return null;
+  return toBuilderAccount(profile);
 }
 
-// Real member accounts signed up in this browser — used by the builder
-// directory to surface actual members alongside the seeded sample ones.
-export function getAllAccounts(): BuilderAccount[] {
-  return readAccounts().map(toPublic);
+// Real member builders, visible to any signed-in user — powers the
+// buyer-facing directory (src/lib/builderDirectory.ts).
+export async function getAllAccounts(): Promise<BuilderAccount[]> {
+  const profiles = await listProfilesByRole("builder");
+  return profiles.map(toBuilderAccount);
 }

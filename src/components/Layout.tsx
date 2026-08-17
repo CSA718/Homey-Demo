@@ -21,6 +21,7 @@ export default function Layout() {
   const { account, logOut } = useAuth();
   const { account: consumerAccount } = useConsumerAuth();
   const navigate = useNavigate();
+  const isAdmin = Boolean(account?.isAdmin || consumerAccount?.isAdmin);
 
   return (
     <div className="flex min-h-svh flex-col bg-paper text-ink">
@@ -51,6 +52,11 @@ export default function Layout() {
             {consumerAccount && (
               <NavLink to="/account" className={navLinkClass}>
                 My Account
+              </NavLink>
+            )}
+            {isAdmin && (
+              <NavLink to="/admin" className={navLinkClass}>
+                Admin
               </NavLink>
             )}
           </nav>
@@ -141,7 +147,7 @@ export default function Layout() {
             </div>
           </div>
           <div className="mt-10 flex flex-col gap-2 border-t border-line pt-6 text-xs text-ink-soft/80 sm:flex-row sm:items-center sm:justify-between">
-            <p>© 2026 Homey. Demo product — not a real service.</p>
+            <p>© 2026 Homey. Preview product — no real payment is processed.</p>
             <p>
               Lot Check is a preliminary screening that identifies risks
               requiring professional verification — never a buildability

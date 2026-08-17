@@ -1,11 +1,11 @@
-// Saved Lot Check history, per consumer account — mirrors renoChecks.ts.
-// Stores the full report + budget fit snapshot (like leads.ts does for
-// builders) so a saved entry renders instantly without re-running the
-// geocode/FEMA lookup.
+// Saved Lot Check history, per consumer account — a real Postgres table
+// (see supabase/schema.sql), synced across every device. Stores the full
+// report + budget fit snapshot so a saved entry renders instantly without
+// re-running the geocode/FEMA lookup.
 
 import type { LotCheckReport } from "./lotCheck";
 import type { BudgetFit } from "./budgetFit";
-import { storage } from "./storage";
+import { supabase } from "./supabaseClient";
 
 export interface SavedLotCheck {
   id: string;
@@ -16,36 +16,75 @@ export interface SavedLotCheck {
   budgetFit: BudgetFit | null;
 }
 
-const HISTORY_KEY_PREFIX = "homey_lotcheck_history_v1_";
-
-function storageKey(accountId: string) {
-  return `${HISTORY_KEY_PREFIX}${accountId}`;
+interface LotCheckRow {
+  id: string;
+  account_id: string;
+  submitted_at: string;
+  report_params: string;
+  report: LotCheckReport;
+  budget_fit: BudgetFit | null;
 }
 
-export function getLotChecksForAccount(accountId: string): SavedLotCheck[] {
-  try {
-    const raw = storage.getItem(storageKey(accountId));
-    return raw ? (JSON.parse(raw) as SavedLotCheck[]) : [];
-  } catch {
-    return [];
-  }
+function fromRow(row: LotCheckRow): SavedLotCheck {
+  return {
+    id: row.id,
+    accountId: row.account_id,
+    submittedAt: row.submitted_at,
+    reportParams: row.report_params,
+    report: row.report,
+    budgetFit: row.budget_fit,
+  };
+}
+
+export async function getLotChecksForAccount(accountId: string): Promise<SavedLotCheck[]> {
+  const { data, error } = await supabase
+    .from("lot_checks")
+    .select("*")
+    .eq("account_id", accountId)
+    .order("submitted_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as LotCheckRow[]).map(fromRow);
+}
+
+export async function getLotCheck(accountId: string, checkId: string): Promise<SavedLotCheck | null> {
+  const { data, error } = await supabase
+    .from("lot_checks")
+    .select("*")
+    .eq("account_id", accountId)
+    .eq("id", checkId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return fromRow(data as LotCheckRow);
+}
+
+// Admin-only: every Lot Check across every account. RLS only returns rows
+// at all if the caller's own profile has is_admin = true.
+export async function listAllLotChecks(): Promise<SavedLotCheck[]> {
+  const { data, error } = await supabase.from("lot_checks").select("*").order("submitted_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as LotCheckRow[]).map(fromRow);
 }
 
 // Upserts by report.id, so revisiting the same address doesn't duplicate
 // the history entry.
-export function saveLotCheck(
+export async function saveLotCheck(
   accountId: string,
   input: Omit<SavedLotCheck, "id" | "accountId" | "submittedAt">,
-): SavedLotCheck {
-  const existing = getLotChecksForAccount(accountId);
-  const dup = existing.find((c) => c.report.id === input.report.id);
-  const entry: SavedLotCheck = {
-    id: dup?.id ?? Math.random().toString(36).slice(2, 10),
-    accountId,
-    submittedAt: dup?.submittedAt ?? new Date().toISOString(),
-    ...input,
-  };
-  const rest = existing.filter((c) => c.report.id !== input.report.id);
-  storage.setItem(storageKey(accountId), JSON.stringify([entry, ...rest]));
-  return entry;
+): Promise<SavedLotCheck> {
+  const { data, error } = await supabase
+    .from("lot_checks")
+    .upsert(
+      {
+        account_id: accountId,
+        report_id: input.report.id,
+        report_params: input.reportParams,
+        report: input.report,
+        budget_fit: input.budgetFit,
+      },
+      { onConflict: "account_id,report_id" },
+    )
+    .select("*")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Failed to save lot check");
+  return fromRow(data as LotCheckRow);
 }

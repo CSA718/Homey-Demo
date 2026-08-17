@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useConsumerAuth } from "../context/ConsumerAuthContext";
 import {
@@ -6,10 +7,10 @@ import {
   cancelMembership,
   resumeMembership,
 } from "../lib/consumerAuth";
-import { getLotChecksForAccount } from "../lib/lotCheckHistory";
-import { getChecksForAccount } from "../lib/renoChecks";
-import { getListingsForConsumer } from "../lib/renovationListings";
-import { getBidsFor } from "../lib/bids";
+import { getLotChecksForAccount, type SavedLotCheck } from "../lib/lotCheckHistory";
+import { getChecksForAccount, type SavedRenovationCheck } from "../lib/renoChecks";
+import { getListingsForConsumer, type RenovationListing } from "../lib/renovationListings";
+import { getBidsForTargets } from "../lib/bids";
 import VerdictBadge from "../components/VerdictBadge";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -25,21 +26,56 @@ function formatMoney(n: number) {
 export default function Account() {
   const { account, refresh, logOut } = useConsumerAuth();
   const navigate = useNavigate();
+  const [lotChecks, setLotChecks] = useState<SavedLotCheck[]>([]);
+  const [renoChecks, setRenoChecks] = useState<SavedRenovationCheck[]>([]);
+  const [listings, setListings] = useState<RenovationListing[]>([]);
+  const [bidCounts, setBidCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!account) return;
+    let active = true;
+    getLotChecksForAccount(account.id).then((v) => active && setLotChecks(v));
+    getChecksForAccount(account.id).then((v) => active && setRenoChecks(v));
+    getListingsForConsumer(account.id).then((v) => active && setListings(v));
+    return () => {
+      active = false;
+    };
+  }, [account]);
+
+  useEffect(() => {
+    if (listings.length === 0) {
+      setBidCounts({});
+      return;
+    }
+    let active = true;
+    getBidsForTargets(
+      "renovation",
+      listings.map((l) => l.id),
+    ).then((bids) => {
+      if (!active) return;
+      const counts: Record<string, number> = {};
+      for (const b of bids) counts[b.targetId] = (counts[b.targetId] ?? 0) + 1;
+      setBidCounts(counts);
+    });
+    return () => {
+      active = false;
+    };
+  }, [listings]);
+
   if (!account) return null;
 
   const subState = getSubscriptionState(account);
   const daysLeft = trialDaysLeft(account);
-  const lotChecks = getLotChecksForAccount(account.id);
-  const renoChecks = getChecksForAccount(account.id);
-  const listings = getListingsForConsumer(account.id);
 
-  function handleCancel() {
-    cancelMembership(account!.id);
+  async function handleCancel() {
+    if (!account) return;
+    await cancelMembership(account.id);
     refresh();
   }
 
-  function handleResume() {
-    resumeMembership(account!.id);
+  async function handleResume() {
+    if (!account) return;
+    await resumeMembership(account.id);
     refresh();
   }
 
@@ -54,15 +90,25 @@ export default function Account() {
             Welcome back, {account.name.split(" ")[0]}
           </h1>
         </div>
-        <button
-          onClick={() => {
-            logOut();
-            navigate("/");
-          }}
-          className="text-sm font-medium text-ink-soft hover:text-forest"
-        >
-          Log out
-        </button>
+        <div className="flex items-center gap-4">
+          {account.isAdmin && (
+            <Link
+              to="/admin"
+              className="rounded-full border border-forest px-4 py-2 text-sm font-semibold text-forest transition-colors hover:bg-forest hover:text-paper"
+            >
+              Admin
+            </Link>
+          )}
+          <button
+            onClick={() => {
+              logOut();
+              navigate("/");
+            }}
+            className="text-sm font-medium text-ink-soft hover:text-forest"
+          >
+            Log out
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-paper-raised p-6">
@@ -248,7 +294,7 @@ export default function Account() {
             </thead>
             <tbody>
               {listings.map((l) => {
-                const bidCount = getBidsFor("renovation", l.id).length;
+                const bidCount = bidCounts[l.id] ?? 0;
                 return (
                   <tr key={l.id} className="border-b border-line last:border-0 hover:bg-sand/30">
                     <td className="px-4 py-3">

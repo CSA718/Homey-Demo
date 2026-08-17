@@ -1,8 +1,8 @@
-// Saved Renovation Check history, per consumer account. Same pattern as
-// leads.ts: no backend, everything lives in localStorage keyed by account id.
+// Saved Renovation Check history, per consumer account — a real Postgres
+// table (see supabase/schema.sql), synced across every device.
 
 import type { HomeAge, RenovationEstimate, RenovationScopeItem } from "./renovation";
-import { storage } from "./storage";
+import { supabase } from "./supabaseClient";
 
 export interface SavedRenovationCheck {
   id: string;
@@ -15,36 +15,77 @@ export interface SavedRenovationCheck {
   estimate: RenovationEstimate;
 }
 
-const CHECKS_KEY_PREFIX = "homey_reno_checks_v1_";
-
-function storageKey(accountId: string) {
-  return `${CHECKS_KEY_PREFIX}${accountId}`;
+interface CheckRow {
+  id: string;
+  account_id: string;
+  submitted_at: string;
+  state: string;
+  home_age: HomeAge;
+  budget: number;
+  scope: RenovationScopeItem[];
+  estimate: RenovationEstimate;
 }
 
-export function getChecksForAccount(accountId: string): SavedRenovationCheck[] {
-  try {
-    const raw = storage.getItem(storageKey(accountId));
-    return raw ? (JSON.parse(raw) as SavedRenovationCheck[]) : [];
-  } catch {
-    return [];
-  }
+function fromRow(row: CheckRow): SavedRenovationCheck {
+  return {
+    id: row.id,
+    accountId: row.account_id,
+    submittedAt: row.submitted_at,
+    state: row.state,
+    homeAge: row.home_age,
+    budget: row.budget,
+    scope: row.scope,
+    estimate: row.estimate,
+  };
 }
 
-export function getCheck(accountId: string, checkId: string): SavedRenovationCheck | null {
-  return getChecksForAccount(accountId).find((c) => c.id === checkId) ?? null;
+export async function getChecksForAccount(accountId: string): Promise<SavedRenovationCheck[]> {
+  const { data, error } = await supabase
+    .from("renovation_checks")
+    .select("*")
+    .eq("account_id", accountId)
+    .order("submitted_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as CheckRow[]).map(fromRow);
 }
 
-export function saveCheck(
+export async function getCheck(accountId: string, checkId: string): Promise<SavedRenovationCheck | null> {
+  const { data, error } = await supabase
+    .from("renovation_checks")
+    .select("*")
+    .eq("account_id", accountId)
+    .eq("id", checkId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return fromRow(data as CheckRow);
+}
+
+// Admin-only: every Renovation Check across every account.
+export async function listAllRenovationChecks(): Promise<SavedRenovationCheck[]> {
+  const { data, error } = await supabase
+    .from("renovation_checks")
+    .select("*")
+    .order("submitted_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as CheckRow[]).map(fromRow);
+}
+
+export async function saveCheck(
   accountId: string,
   input: Omit<SavedRenovationCheck, "id" | "accountId" | "submittedAt">,
-): SavedRenovationCheck {
-  const check: SavedRenovationCheck = {
-    id: Math.random().toString(36).slice(2, 10),
-    accountId,
-    submittedAt: new Date().toISOString(),
-    ...input,
-  };
-  const existing = getChecksForAccount(accountId);
-  storage.setItem(storageKey(accountId), JSON.stringify([check, ...existing]));
-  return check;
+): Promise<SavedRenovationCheck> {
+  const { data, error } = await supabase
+    .from("renovation_checks")
+    .insert({
+      account_id: accountId,
+      state: input.state,
+      home_age: input.homeAge,
+      budget: input.budget,
+      scope: input.scope,
+      estimate: input.estimate,
+    })
+    .select("*")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Failed to save renovation check");
+  return fromRow(data as CheckRow);
 }

@@ -316,7 +316,8 @@ export default function LotCheck() {
           {account ? "Run this Lot Check" : "Start free trial & run this Lot Check"}
         </button>
         <p className="text-center text-xs text-ink-soft">
-          This demo uses a mocked checkout — no real payment is processed.
+          Your account is created for real — payment isn't wired up yet, so
+          no real card is charged.
         </p>
       </form>
     </div>

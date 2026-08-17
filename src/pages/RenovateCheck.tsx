@@ -60,7 +60,7 @@ export default function RenovateCheck() {
       const result = computeRenovationEstimate(Number(budget), state, homeAge, scope);
       setEstimate(result);
       setSubmittedScope(scope);
-      saveCheck(account.id, { state, homeAge, budget: Number(budget), scope, estimate: result });
+      saveCheck(account.id, { state, homeAge, budget: Number(budget), scope, estimate: result }).catch(() => {});
       setStage("result");
     }, 900);
   }

@@ -66,7 +66,7 @@ export default function Report() {
       reportParams: params.toString(),
       report,
       budgetFit,
-    });
+    }).catch(() => {});
   }, [account, report, budgetFit, params]);
 
   const [scanned, setScanned] = useState(0);
@@ -171,7 +171,18 @@ export default function Report() {
 
       <FloorPlanPreview spec={conceptSpec} />
 
-      <ConnectWithBuilders report={report} budgetFit={budgetFit} email={email} />
+      {account ? (
+        <ConnectWithBuilders report={report} budgetFit={budgetFit} email={email} buyerAccountId={account.id} />
+      ) : (
+        <div className="mt-8 rounded-2xl border border-dashed border-line bg-paper-raised p-6 text-center print:hidden">
+          <p className="text-ink-soft">
+            <Link to="/account/login" className="font-semibold text-forest hover:underline">
+              Log in
+            </Link>{" "}
+            to connect with a member builder in {report.state}.
+          </p>
+        </div>
+      )}
 
       <ReportBids reportId={report.id} />
 

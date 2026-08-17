@@ -59,7 +59,7 @@ export default function Checkout() {
         ? `${TRIAL_DAYS}-day free trial, then billed monthly — includes this Lot Check`
         : `${TRIAL_DAYS}-day free trial, then billed monthly`;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -77,33 +77,41 @@ export default function Checkout() {
 
     setStatus("processing");
 
-    window.setTimeout(() => {
-      if (type === "membership") {
-        const result = signUp(businessName, email, password, serviceState);
-        if ("error" in result) {
-          setStatus("form");
-          setError(result.error);
-          return;
-        }
-        refresh();
-        navigate("/dashboard");
-        return;
-      }
-      const result = consumerSignUp(consumerName, email, password);
+    if (type === "membership") {
+      const result = await signUp(businessName, email, password, serviceState);
       if ("error" in result) {
         setStatus("form");
         setError(result.error);
         return;
       }
-      refreshConsumer();
-      if (fromLotCheck) {
-        const reportParams = new URLSearchParams(params);
-        reportParams.delete("type");
-        navigate(`/report?${reportParams.toString()}`);
+      if ("pendingConfirmation" in result) {
+        setStatus("form");
+        setError("Check your email to confirm your account, then log in.");
         return;
       }
-      navigate("/renovate/check");
-    }, 1600);
+      refresh();
+      navigate("/dashboard");
+      return;
+    }
+    const result = await consumerSignUp(consumerName, email, password);
+    if ("error" in result) {
+      setStatus("form");
+      setError(result.error);
+      return;
+    }
+    if ("pendingConfirmation" in result) {
+      setStatus("form");
+      setError("Check your email to confirm your account, then log in.");
+      return;
+    }
+    refreshConsumer();
+    if (fromLotCheck) {
+      const reportParams = new URLSearchParams(params);
+      reportParams.delete("type");
+      navigate(`/report?${reportParams.toString()}`);
+      return;
+    }
+    navigate("/renovate/check");
   }
 
   if (status === "processing") {
@@ -114,7 +122,7 @@ export default function Checkout() {
           {type === "consumer-trial" ? "Setting up your free trial…" : "Processing payment…"}
         </p>
         <p className="mt-2 text-sm text-ink-soft">
-          This is a demo — no real card is charged.
+          Your account is real — no real card is charged.
         </p>
       </div>
     );
@@ -123,7 +131,7 @@ export default function Checkout() {
   return (
     <div className="mx-auto max-w-lg px-6 py-16">
       <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-        Demo checkout · no real charge
+        No real charge · your account is real
       </span>
       <h1 className="mt-6 font-serif text-3xl text-ink">Checkout</h1>
 
@@ -332,8 +340,8 @@ export default function Checkout() {
             : `Pay $${amount.toLocaleString("en-US")}/mo`}
         </button>
         <p className="text-center text-xs text-ink-soft">
-          Demo checkout. No card is validated or charged, and nothing is sent
-          anywhere.
+          Your account is created for real. Card details aren't validated,
+          charged, or stored anywhere — payment isn't wired up yet.
         </p>
       </form>
     </div>

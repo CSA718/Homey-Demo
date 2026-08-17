@@ -56,9 +56,9 @@ export default function BuilderEstimateTool({
     }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     const toSave: BuilderEstimate = { ...estimate, updatedAt: new Date().toISOString() };
-    updateBuilderEstimate(accountId, lead.id, toSave);
+    await updateBuilderEstimate(accountId, lead.id, toSave);
     setEstimate(toSave);
     setSaved(true);
     onSave(toSave);

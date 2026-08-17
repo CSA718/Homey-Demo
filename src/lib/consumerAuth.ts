@@ -1,13 +1,18 @@
-// Local "demo accounts" for the consumer Homey Membership — a single
-// $25/mo, 7-day-free-trial account that covers both Lot Check and
-// Renovation Check, kept separate from builder accounts (src/lib/auth.ts)
-// since those are a different kind of member with a different
-// relationship to the product. No backend, no database, no real billing:
-// everything lives in localStorage, and the password hash below is a
-// simple non-cryptographic checksum, adequate only because this data
-// never leaves the browser.
+// The consumer Homey Membership — a single $25/mo, 7-day-free-trial
+// account that covers both Lot Check and Renovation Check. Real accounts
+// backed by Supabase Auth (see src/lib/profile.ts), shared across every
+// device. Trial/billing state is tracked as real data — there is no real
+// payment processor wired in.
 
-import { storage } from "./storage";
+import { supabase } from "./supabaseClient";
+import {
+  signUpWithProfile,
+  logInWithProfile,
+  logOut as logOutProfile,
+  getCurrentProfile,
+  fetchProfile,
+  type Profile,
+} from "./profile";
 
 const TRIAL_DAYS = 7;
 
@@ -18,41 +23,21 @@ export interface ConsumerAccount {
   createdAt: string;
   trialEndsAt: string;
   canceledAt: string | null;
-}
-
-interface StoredConsumerAccount extends ConsumerAccount {
-  passwordHash: string;
+  isAdmin: boolean;
 }
 
 export type SubscriptionState = "trialing" | "active" | "canceled";
 
-const ACCOUNTS_KEY = "homey_consumer_accounts_v1";
-const SESSION_KEY = "homey_consumer_session";
-
-function hashPassword(password: string): string {
-  let hash = 5381;
-  for (let i = 0; i < password.length; i++) {
-    hash = (hash * 33) ^ password.charCodeAt(i);
-  }
-  return (hash >>> 0).toString(36);
-}
-
-function readAccounts(): StoredConsumerAccount[] {
-  try {
-    const raw = storage.getItem(ACCOUNTS_KEY);
-    return raw ? (JSON.parse(raw) as StoredConsumerAccount[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeAccounts(accounts: StoredConsumerAccount[]) {
-  storage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-}
-
-function toPublic(account: StoredConsumerAccount): ConsumerAccount {
-  const { passwordHash: _passwordHash, ...pub } = account;
-  return pub;
+function toConsumerAccount(profile: Profile): ConsumerAccount {
+  return {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    createdAt: profile.createdAt,
+    trialEndsAt: profile.trialEndsAt ?? profile.createdAt,
+    canceledAt: profile.canceledAt,
+    isAdmin: profile.isAdmin,
+  };
 }
 
 export function getSubscriptionState(account: ConsumerAccount): SubscriptionState {
@@ -65,77 +50,60 @@ export function trialDaysLeft(account: ConsumerAccount): number {
   return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
 }
 
-export function signUp(
+export async function signUp(
   name: string,
   email: string,
   password: string,
-): { account: ConsumerAccount } | { error: string } {
-  const normalizedEmail = email.trim().toLowerCase();
-  const accounts = readAccounts();
-  if (accounts.some((a) => a.email === normalizedEmail)) {
-    return { error: "An account with that email already exists. Try logging in instead." };
-  }
-  const now = new Date();
-  const trialEndsAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-  const account: StoredConsumerAccount = {
-    id: Math.random().toString(36).slice(2, 10),
-    name: name.trim(),
-    email: normalizedEmail,
-    createdAt: now.toISOString(),
-    trialEndsAt: trialEndsAt.toISOString(),
-    canceledAt: null,
-    passwordHash: hashPassword(password),
-  };
-  accounts.push(account);
-  writeAccounts(accounts);
-  storage.setItem(SESSION_KEY, account.id);
+): Promise<{ account: ConsumerAccount } | { pendingConfirmation: true } | { error: string }> {
+  const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const result = await signUpWithProfile({
+    email,
+    password,
+    role: "consumer",
+    name,
+    trialEndsAt,
+  });
+  if ("error" in result || "pendingConfirmation" in result) return result;
   window.dispatchEvent(new Event("homey-consumer-auth-change"));
-  return { account: toPublic(account) };
+  return { account: toConsumerAccount(result.profile) };
 }
 
-export function logIn(
+export async function logIn(
   email: string,
   password: string,
-): { account: ConsumerAccount } | { error: string } {
-  const normalizedEmail = email.trim().toLowerCase();
-  const accounts = readAccounts();
-  const account = accounts.find((a) => a.email === normalizedEmail);
-  if (!account || account.passwordHash !== hashPassword(password)) {
-    return { error: "No account matches that email and password." };
-  }
-  storage.setItem(SESSION_KEY, account.id);
+): Promise<{ account: ConsumerAccount } | { error: string }> {
+  const result = await logInWithProfile(email, password, "consumer");
+  if ("error" in result) return result;
   window.dispatchEvent(new Event("homey-consumer-auth-change"));
-  return { account: toPublic(account) };
+  return { account: toConsumerAccount(result.profile) };
 }
 
-export function logOut() {
-  storage.removeItem(SESSION_KEY);
+export async function logOut(): Promise<void> {
+  await logOutProfile();
   window.dispatchEvent(new Event("homey-consumer-auth-change"));
 }
 
-export function getSession(): ConsumerAccount | null {
-  const id = storage.getItem(SESSION_KEY);
-  if (!id) return null;
-  const account = readAccounts().find((a) => a.id === id);
-  return account ? toPublic(account) : null;
+export async function getSession(): Promise<ConsumerAccount | null> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "consumer") return null;
+  return toConsumerAccount(profile);
 }
 
-export function cancelMembership(accountId: string): ConsumerAccount | null {
-  const accounts = readAccounts();
-  const account = accounts.find((a) => a.id === accountId);
-  if (!account) return null;
-  account.canceledAt = new Date().toISOString();
-  writeAccounts(accounts);
+export async function cancelMembership(accountId: string): Promise<ConsumerAccount | null> {
+  const canceledAt = new Date().toISOString();
+  const { error } = await supabase.from("profiles").update({ canceled_at: canceledAt }).eq("id", accountId);
+  if (error) return null;
+  const profile = await fetchProfile(accountId);
+  if (!profile) return null;
   window.dispatchEvent(new Event("homey-consumer-auth-change"));
-  return toPublic(account);
+  return toConsumerAccount(profile);
 }
 
-export function resumeMembership(accountId: string): ConsumerAccount | null {
-  const accounts = readAccounts();
-  const account = accounts.find((a) => a.id === accountId);
-  if (!account) return null;
-  account.canceledAt = null;
-  writeAccounts(accounts);
+export async function resumeMembership(accountId: string): Promise<ConsumerAccount | null> {
+  const { error } = await supabase.from("profiles").update({ canceled_at: null }).eq("id", accountId);
+  if (error) return null;
+  const profile = await fetchProfile(accountId);
+  if (!profile) return null;
   window.dispatchEvent(new Event("homey-consumer-auth-change"));
-  return toPublic(account);
+  return toConsumerAccount(profile);
 }

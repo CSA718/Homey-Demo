@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getLeadsForAccount, type Lead } from "../lib/leads";
-import { getBidsFor } from "../lib/bids";
+import { getBidsFor, type Bid } from "../lib/bids";
 import ReportView from "../components/ReportView";
 import BuilderEstimateTool from "../components/BuilderEstimateTool";
 import BidForm from "../components/BidForm";
@@ -12,13 +12,28 @@ export default function LeadDetail() {
   const { account } = useAuth();
   const { leadId } = useParams();
   const [lead, setLead] = useState<Lead | null | undefined>(undefined);
-  const [, forceRerender] = useState(0);
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [bidsVersion, setBidsVersion] = useState(0);
 
   useEffect(() => {
     if (!account) return;
-    const leads = getLeadsForAccount(account.id);
-    setLead(leads.find((l) => l.id === leadId) ?? null);
+    let active = true;
+    getLeadsForAccount(account.id).then((leads) => {
+      if (active) setLead(leads.find((l) => l.id === leadId) ?? null);
+    });
+    return () => {
+      active = false;
+    };
   }, [account, leadId]);
+
+  useEffect(() => {
+    if (!lead) return;
+    let active = true;
+    getBidsFor("lot-check", lead.report.id).then((b) => active && setBids(b));
+    return () => {
+      active = false;
+    };
+  }, [lead, bidsVersion]);
 
   if (!account) return null;
   if (lead === null) return <Navigate to="/dashboard" replace />;
@@ -63,13 +78,13 @@ export default function LeadDetail() {
           targetId={lead.report.id}
           builderAccountId={account.id}
           builderName={account.businessName}
-          onSubmitted={() => forceRerender((n) => n + 1)}
+          onSubmitted={() => setBidsVersion((n) => n + 1)}
         />
       </div>
 
       <h2 className="mt-8 font-serif text-xl text-ink">All bids on this lot</h2>
       <div className="mt-4">
-        <BidList bids={getBidsFor("lot-check", lead.report.id)} viewerBuilderAccountId={account.id} />
+        <BidList bids={bids} viewerBuilderAccountId={account.id} />
       </div>
 
       <div className="mt-6">

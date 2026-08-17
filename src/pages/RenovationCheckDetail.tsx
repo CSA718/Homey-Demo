@@ -1,14 +1,25 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useConsumerAuth } from "../context/ConsumerAuthContext";
-import { getCheck } from "../lib/renoChecks";
+import { getCheck, type SavedRenovationCheck } from "../lib/renoChecks";
 import RenovationEstimateCard from "../components/RenovationEstimateCard";
 
 export default function RenovationCheckDetail() {
   const { checkId } = useParams();
   const { account } = useConsumerAuth();
-  if (!account) return null;
+  const [check, setCheck] = useState<SavedRenovationCheck | null | undefined>(undefined);
 
-  const check = checkId ? getCheck(account.id, checkId) : null;
+  useEffect(() => {
+    if (!account || !checkId) return;
+    let active = true;
+    getCheck(account.id, checkId).then((c) => active && setCheck(c));
+    return () => {
+      active = false;
+    };
+  }, [account, checkId]);
+
+  if (!account) return null;
+  if (check === undefined) return null;
   if (!check) return <Navigate to="/account" replace />;
 
   return (

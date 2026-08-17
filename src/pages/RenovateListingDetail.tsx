@@ -1,28 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useConsumerAuth } from "../context/ConsumerAuthContext";
-import { getListing } from "../lib/renovationListings";
-import { getBidsFor, getAcceptedBidId, acceptBid } from "../lib/bids";
+import { getListing, type RenovationListing } from "../lib/renovationListings";
+import { getBidsFor, getAcceptedBidId, acceptBid, type Bid } from "../lib/bids";
 import RenovationEstimateCard from "../components/RenovationEstimateCard";
 import BidList from "../components/BidList";
 
 export default function RenovateListingDetail() {
   const { listingId } = useParams();
   const { account } = useConsumerAuth();
-  const [, forceRerender] = useState(0);
-  if (!account) return null;
+  const [listing, setListing] = useState<RenovationListing | null | undefined>(undefined);
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [acceptedBidId, setAcceptedBidId] = useState<string | null>(null);
+  const [bidsVersion, setBidsVersion] = useState(0);
 
-  const listing = listingId ? getListing(listingId) : null;
+  useEffect(() => {
+    if (!listingId) return;
+    let active = true;
+    getListing(listingId).then((l) => active && setListing(l));
+    return () => {
+      active = false;
+    };
+  }, [listingId]);
+
+  useEffect(() => {
+    if (!listing) return;
+    let active = true;
+    Promise.all([getBidsFor("renovation", listing.id), getAcceptedBidId("renovation", listing.id)]).then(
+      ([b, accepted]) => {
+        if (!active) return;
+        setBids(b);
+        setAcceptedBidId(accepted);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [listing, bidsVersion]);
+
+  if (!account) return null;
+  if (listing === undefined) return null;
   if (!listing || listing.consumerAccountId !== account.id) {
     return <Navigate to="/account" replace />;
   }
 
-  const bids = getBidsFor("renovation", listing.id);
-  const acceptedBidId = getAcceptedBidId("renovation", listing.id);
-
-  function handleAccept(bidId: string) {
-    acceptBid("renovation", listing!.id, bidId);
-    forceRerender((n) => n + 1);
+  async function handleAccept(bidId: string) {
+    if (!listing) return;
+    await acceptBid("renovation", listing.id, bidId);
+    setBidsVersion((n) => n + 1);
   }
 
   return (

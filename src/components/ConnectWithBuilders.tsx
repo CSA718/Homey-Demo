@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { LotCheckReport } from "../lib/lotCheck";
 import type { BudgetFit } from "../lib/budgetFit";
 import { getMatchedBuilders, type DirectoryBuilder } from "../lib/builderDirectory";
@@ -8,12 +8,23 @@ export default function ConnectWithBuilders({
   report,
   budgetFit,
   email,
+  buyerAccountId,
 }: {
   report: LotCheckReport;
   budgetFit: BudgetFit | null;
   email: string;
+  buyerAccountId: string;
 }) {
-  const builders = useMemo(() => getMatchedBuilders(report.state), [report.state]);
+  const [builders, setBuilders] = useState<DirectoryBuilder[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    getMatchedBuilders(report.state).then((b) => active && setBuilders(b));
+    return () => {
+      active = false;
+    };
+  }, [report.state]);
+
   const hasInState = builders.some((b) => b.state === report.state);
 
   const [name, setName] = useState("");
@@ -23,7 +34,7 @@ export default function ConnectWithBuilders({
 
   if (builders.length === 0) return null;
 
-  function handleConnect(builder: DirectoryBuilder) {
+  async function handleConnect(builder: DirectoryBuilder) {
     if (!name.trim() || phone.trim().length < 7) {
       setError("Enter your name and phone number first, so the builder can reach you.");
       return;
@@ -31,7 +42,7 @@ export default function ConnectWithBuilders({
     setError(null);
 
     if (builder.isRealAccount && budgetFit) {
-      addConnectionLead(builder.id, {
+      await addConnectionLead(builder.id, buyerAccountId, {
         name: name.trim(),
         email,
         phone: phone.trim(),

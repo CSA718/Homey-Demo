@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ConsumerProtectedRoute from "./components/ConsumerProtectedRoute";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Home from "./pages/Home";
 import LotCheck from "./pages/LotCheck";
 import Checkout from "./pages/Checkout";
@@ -19,6 +20,7 @@ import Account from "./pages/Account";
 import LotCheckHistoryDetail from "./pages/LotCheckHistoryDetail";
 import RenovationCheckDetail from "./pages/RenovationCheckDetail";
 import RenovateListingDetail from "./pages/RenovateListingDetail";
+import Admin from "./pages/Admin";
 
 function App() {
   return (
@@ -95,6 +97,14 @@ function App() {
             <ConsumerProtectedRoute>
               <RenovateListingDetail />
             </ConsumerProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminProtectedRoute>
+              <Admin />
+            </AdminProtectedRoute>
           }
         />
       </Route>

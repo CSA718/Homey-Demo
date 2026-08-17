@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMatchedBuilders } from "../lib/builderDirectory";
+import { getMatchedBuilders, type DirectoryBuilder } from "../lib/builderDirectory";
 import { createListing } from "../lib/renovationListings";
 import type { ConsumerAccount } from "../lib/consumerAuth";
 import type { HomeAge, RenovationEstimate, RenovationScopeItem } from "../lib/renovation";
@@ -21,7 +21,16 @@ export default function PostRenovationListing({
   estimate: RenovationEstimate;
 }) {
   const navigate = useNavigate();
-  const contractors = useMemo(() => getMatchedBuilders(state), [state]);
+  const [contractors, setContractors] = useState<DirectoryBuilder[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    getMatchedBuilders(state).then((c) => active && setContractors(c));
+    return () => {
+      active = false;
+    };
+  }, [state]);
+
   const hasInState = contractors.some((c) => c.state === state);
 
   const [phone, setPhone] = useState("");
@@ -30,13 +39,13 @@ export default function PostRenovationListing({
 
   if (contractors.length === 0) return null;
 
-  function handlePost() {
+  async function handlePost() {
     if (phone.trim().length < 7) {
       setError("Enter a phone number so contractors can reach you.");
       return;
     }
     setError(null);
-    const listing = createListing({
+    const listing = await createListing({
       consumerAccountId: account.id,
       consumerName: account.name,
       consumerEmail: account.email,
