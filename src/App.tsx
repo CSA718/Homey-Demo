@@ -16,6 +16,8 @@ import RenovateLogin from "./pages/RenovateLogin";
 import RenovateCheck from "./pages/RenovateCheck";
 import RenovateDashboard from "./pages/RenovateDashboard";
 import RenovateCheckDetail from "./pages/RenovateCheckDetail";
+import RenovateListingDetail from "./pages/RenovateListingDetail";
+import RenovationJobDetail from "./pages/RenovationJobDetail";
 
 function App() {
   return (
@@ -44,6 +46,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/renovation-jobs/:listingId"
+          element={
+            <ProtectedRoute>
+              <RenovationJobDetail />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/renovate" element={<Renovate />} />
         <Route path="/renovate/login" element={<RenovateLogin />} />
         <Route
@@ -67,6 +77,14 @@ function App() {
           element={
             <RenoProtectedRoute>
               <RenovateCheckDetail />
+            </RenoProtectedRoute>
+          }
+        />
+        <Route
+          path="/renovate/listings/:listingId"
+          element={
+            <RenoProtectedRoute>
+              <RenovateListingDetail />
             </RenoProtectedRoute>
           }
         />

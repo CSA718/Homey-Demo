@@ -30,6 +30,13 @@ renovation cost index and a contingency for the home's age. It's a
 separate membership from Lot Check/builder membership, with its own
 consumer accounts, trial/subscription state, and saved check history.
 
+Both sides now support **contractor bidding**. A homeowner can post their
+Renovation Check as an open listing for member contractors serving their
+state to bid on, and Lot Check buyers who connect with a builder can
+likewise receive a formal bid back — a price range and timeline, not just
+a callback. Builders see both kinds of jobs (Lot Check leads and open
+renovation listings) from the same dashboard and bid on either.
+
 ## What's real vs. simulated
 
 - **Flood zone data is live, nationwide.** The Lot Check flow geocodes the
@@ -127,6 +134,19 @@ consumer accounts, trial/subscription state, and saved check history.
   stored trial-end date — no real billing), and a saved history of every
   check run, all in `localStorage`. (`src/lib/renoAuth.ts`,
   `src/lib/renoChecks.ts`, `src/context/RenoAuthContext.tsx`)
+- **Bids and renovation listings are real, shared, cross-account data** —
+  the same "shared `localStorage` as a fake backend" pattern as builder
+  accounts, so a bid one account (a builder) submits is immediately visible
+  to the other account (a buyer or homeowner) in the same browser, even
+  though they're different logins. A Renovation Check listing is posted
+  once and is visible to every matched contractor in that state, who each
+  submit their own bid; a Lot Check report can likewise collect bids from
+  every builder the buyer connected with. Buyers have no login for Lot
+  Check, so bids are looked up by the report's deterministic id (same
+  address always produces the same report and the same id) — bookmarking
+  the report URL is what lets a buyer check back for bids.
+  (`src/lib/bids.ts`, `src/lib/renovationListings.ts`,
+  `src/components/BidForm.tsx`, `src/components/BidList.tsx`)
 
 ## Pages
 
@@ -140,8 +160,10 @@ consumer accounts, trial/subscription state, and saved check history.
 - `/builder-login` — login for existing builder demo accounts
 - `/dashboard` — protected: a builder's referred leads (seeded across
   multiple states), pipeline stats, and status tracking
-- `/dashboard/leads/:leadId` — protected: a single lead's contact info and
-  full Lot Check report
+- `/dashboard/leads/:leadId` — protected: a single lead's contact info,
+  full Lot Check report, and the builder's bid + everyone else's bids on it
+- `/dashboard/renovation-jobs/:listingId` — protected: an open renovation
+  listing matched to the builder's state, with a bid form
 - `/how-it-works` — data sources, the automation + human-review pipeline,
   disclaimers
 - `/renovate` — Renovation Check marketing page, $25/mo with a 7-day free
@@ -153,6 +175,8 @@ consumer accounts, trial/subscription state, and saved check history.
   and saved check history
 - `/renovate/checks/:checkId` — protected: a single saved renovation
   estimate
+- `/renovate/listings/:listingId` — protected: a posted listing and the
+  bids contractors have submitted on it, with an accept action
 
 ## Stack
 

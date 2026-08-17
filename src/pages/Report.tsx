@@ -5,6 +5,7 @@ import { computeBudgetFit, type BuildTier } from "../lib/budgetFit";
 import ReportView from "../components/ReportView";
 import ConnectWithBuilders from "../components/ConnectWithBuilders";
 import FloorPlanPreview from "../components/FloorPlanPreview";
+import ReportBids from "../components/ReportBids";
 
 const SCAN_STEPS = [
   { label: "Geocoding address (US Census Bureau)", live: true },
@@ -158,6 +159,8 @@ export default function Report() {
       <FloorPlanPreview spec={conceptSpec} />
 
       <ConnectWithBuilders report={report} budgetFit={budgetFit} email={email} />
+
+      <ReportBids reportId={report.id} />
 
       <div className="mt-10 flex flex-col gap-4 border-t border-line pt-8 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div>

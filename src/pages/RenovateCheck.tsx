@@ -12,6 +12,7 @@ import {
 import { useRenoAuth } from "../context/RenoAuthContext";
 import { saveCheck } from "../lib/renoChecks";
 import RenovationEstimateCard from "../components/RenovationEstimateCard";
+import PostRenovationListing from "../components/PostRenovationListing";
 
 function defaultQuantity(unit: string) {
   if (unit === "sqft") return 200;
@@ -26,6 +27,7 @@ export default function RenovateCheck() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [stage, setStage] = useState<"form" | "computing" | "result">("form");
   const [estimate, setEstimate] = useState<RenovationEstimate | null>(null);
+  const [submittedScope, setSubmittedScope] = useState<RenovationScopeItem[]>([]);
 
   const selectedKeys = Object.keys(quantities).filter((k) => quantities[k] > 0);
 
@@ -57,6 +59,7 @@ export default function RenovateCheck() {
       }));
       const result = computeRenovationEstimate(Number(budget), state, homeAge, scope);
       setEstimate(result);
+      setSubmittedScope(scope);
       saveCheck(account.id, { state, homeAge, budget: Number(budget), scope, estimate: result });
       setStage("result");
     }, 900);
@@ -84,10 +87,18 @@ export default function RenovateCheck() {
     );
   }
 
-  if (stage === "result" && estimate) {
+  if (stage === "result" && estimate && account) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <RenovationEstimateCard estimate={estimate} />
+        <PostRenovationListing
+          account={account}
+          state={state}
+          homeAge={homeAge}
+          budget={Number(budget)}
+          scope={submittedScope}
+          estimate={estimate}
+        />
         <div className="mt-8 flex flex-wrap gap-3">
           <button
             onClick={handleReset}

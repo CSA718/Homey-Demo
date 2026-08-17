@@ -8,6 +8,8 @@ import {
   type Lead,
   type LeadStatus,
 } from "../lib/leads";
+import { getListingsForState, type RenovationListing } from "../lib/renovationListings";
+import { getBidsFor, getBidByBuilder } from "../lib/bids";
 import VerdictBadge from "../components/VerdictBadge";
 
 const HOURS_PER_BID = 8;
@@ -34,9 +36,14 @@ function formatMoney(n: number) {
 export default function Dashboard() {
   const { account, logOut } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [listings, setListings] = useState<RenovationListing[]>([]);
+  const [tab, setTab] = useState<"leads" | "renovation">("leads");
 
   useEffect(() => {
-    if (account) setLeads(getLeadsForAccount(account.id));
+    if (account) {
+      setLeads(getLeadsForAccount(account.id));
+      setListings(getListingsForState(account.state));
+    }
   }, [account]);
 
   if (!account) return null;
@@ -97,78 +104,164 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="mt-10 overflow-x-auto rounded-xl border border-line bg-paper-raised">
-        <table className="w-full min-w-[720px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-semibold">Buyer</th>
-              <th className="px-5 py-3 font-semibold">Lot</th>
-              <th className="px-5 py-3 font-semibold">Verdict</th>
-              <th className="px-5 py-3 font-semibold">Budget</th>
-              <th className="px-5 py-3 font-semibold">Referred</th>
-              <th className="px-5 py-3 font-semibold">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leads.map((lead) => (
-              <tr key={lead.id} className="border-b border-line last:border-0">
-                <td className="px-5 py-4">
-                  <Link
-                    to={`/dashboard/leads/${lead.id}`}
-                    className="font-semibold text-ink hover:text-forest hover:underline"
-                  >
-                    {lead.buyerName}
-                  </Link>
-                  <p className="text-xs text-ink-soft">{lead.email}</p>
-                </td>
-                <td className="px-5 py-4 text-ink-soft">
-                  {lead.report.address}
-                  <p className="text-xs">{lead.report.city}, {lead.report.state}</p>
-                </td>
-                <td className="px-5 py-4">
-                  <VerdictBadge verdict={lead.report.verdict} label={lead.report.verdictLabel} />
-                </td>
-                <td className="px-5 py-4">
-                  <span className="inline-flex items-center gap-1.5 text-ink-soft">
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${BUDGET_FIT_DOT[lead.budgetFit.status]}`}
-                      title={lead.budgetFit.statusLabel}
-                    />
-                    {formatMoney(lead.budgetFit.budget)}
-                  </span>
-                </td>
-                <td className="px-5 py-4 text-ink-soft">
-                  {new Date(lead.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </td>
-                <td className="px-5 py-4">
-                  <select
-                    value={lead.status}
-                    onChange={(e) =>
-                      handleStatusChange(lead.id, e.target.value as LeadStatus)
-                    }
-                    className={`rounded-full border-0 px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-forest/30 ${STATUS_STYLE[lead.status]}`}
-                  >
-                    {LEAD_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-10 flex gap-2">
+        <button
+          onClick={() => setTab("leads")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            tab === "leads" ? "bg-forest text-paper" : "bg-sand text-ink-soft hover:bg-sand/70"
+          }`}
+        >
+          Lot Check Leads
+        </button>
+        <button
+          onClick={() => setTab("renovation")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            tab === "renovation" ? "bg-forest text-paper" : "bg-sand text-ink-soft hover:bg-sand/70"
+          }`}
+        >
+          Renovation Jobs{listings.length > 0 ? ` (${listings.length})` : ""}
+        </button>
       </div>
 
-      {leads.length === 0 && (
-        <p className="mt-8 text-center text-ink-soft">
-          No leads yet — they'll appear here as buyers come back from Homey
-          with a verified lot.
-        </p>
+      {tab === "leads" && (
+        <>
+          <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-paper-raised">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                  <th className="px-5 py-3 font-semibold">Buyer</th>
+                  <th className="px-5 py-3 font-semibold">Lot</th>
+                  <th className="px-5 py-3 font-semibold">Verdict</th>
+                  <th className="px-5 py-3 font-semibold">Budget</th>
+                  <th className="px-5 py-3 font-semibold">Referred</th>
+                  <th className="px-5 py-3 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map((lead) => {
+                  const myBid = getBidByBuilder("lot-check", lead.report.id, account.id);
+                  return (
+                    <tr key={lead.id} className="border-b border-line last:border-0">
+                      <td className="px-5 py-4">
+                        <Link
+                          to={`/dashboard/leads/${lead.id}`}
+                          className="font-semibold text-ink hover:text-forest hover:underline"
+                        >
+                          {lead.buyerName}
+                        </Link>
+                        <p className="text-xs text-ink-soft">{lead.email}</p>
+                        {myBid && (
+                          <p className="mt-0.5 text-xs text-clear">Bid submitted</p>
+                        )}
+                      </td>
+                      <td className="px-5 py-4 text-ink-soft">
+                        {lead.report.address}
+                        <p className="text-xs">{lead.report.city}, {lead.report.state}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <VerdictBadge verdict={lead.report.verdict} label={lead.report.verdictLabel} />
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-1.5 text-ink-soft">
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${BUDGET_FIT_DOT[lead.budgetFit.status]}`}
+                            title={lead.budgetFit.statusLabel}
+                          />
+                          {formatMoney(lead.budgetFit.budget)}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-ink-soft">
+                        {new Date(lead.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="px-5 py-4">
+                        <select
+                          value={lead.status}
+                          onChange={(e) =>
+                            handleStatusChange(lead.id, e.target.value as LeadStatus)
+                          }
+                          className={`rounded-full border-0 px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-forest/30 ${STATUS_STYLE[lead.status]}`}
+                        >
+                          {LEAD_STATUSES.map((s) => (
+                            <option key={s.value} value={s.value}>
+                              {s.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {leads.length === 0 && (
+            <p className="mt-8 text-center text-ink-soft">
+              No leads yet — they'll appear here as buyers come back from
+              Homey with a verified lot.
+            </p>
+          )}
+        </>
+      )}
+
+      {tab === "renovation" && (
+        <>
+          <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-paper-raised">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                  <th className="px-5 py-3 font-semibold">Homeowner</th>
+                  <th className="px-5 py-3 font-semibold">State</th>
+                  <th className="px-5 py-3 font-semibold">Scope</th>
+                  <th className="px-5 py-3 font-semibold">Budget</th>
+                  <th className="px-5 py-3 font-semibold">Posted</th>
+                  <th className="px-5 py-3 font-semibold">Bids</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listings.map((listing) => {
+                  const bidCount = getBidsFor("renovation", listing.id).length;
+                  const myBid = getBidByBuilder("renovation", listing.id, account.id);
+                  return (
+                    <tr key={listing.id} className="border-b border-line last:border-0">
+                      <td className="px-5 py-4">
+                        <Link
+                          to={`/dashboard/renovation-jobs/${listing.id}`}
+                          className="font-semibold text-ink hover:text-forest hover:underline"
+                        >
+                          {listing.consumerName}
+                        </Link>
+                        {myBid && <p className="mt-0.5 text-xs text-clear">Bid submitted</p>}
+                      </td>
+                      <td className="px-5 py-4 text-ink-soft">{listing.state}</td>
+                      <td className="px-5 py-4 text-ink-soft">
+                        {listing.scope.length} item{listing.scope.length === 1 ? "" : "s"}
+                      </td>
+                      <td className="px-5 py-4 text-ink-soft">{formatMoney(listing.budget)}</td>
+                      <td className="px-5 py-4 text-ink-soft">
+                        {new Date(listing.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="px-5 py-4 text-ink-soft">{bidCount}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {listings.length === 0 && (
+            <p className="mt-8 text-center text-ink-soft">
+              No open renovation jobs in {account.state} yet — they'll
+              appear here as homeowners post projects for bids.
+            </p>
+          )}
+        </>
       )}
     </div>
   );

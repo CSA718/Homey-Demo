@@ -7,6 +7,8 @@ import {
   resumeMembership,
 } from "../lib/renoAuth";
 import { getChecksForAccount } from "../lib/renoChecks";
+import { getListingsForConsumer } from "../lib/renovationListings";
+import { getBidsFor } from "../lib/bids";
 
 const STATUS_BADGE: Record<string, string> = {
   trialing: "bg-caution-bg text-caution border-caution/30",
@@ -26,6 +28,7 @@ export default function RenovateDashboard() {
   const subState = getSubscriptionState(account);
   const daysLeft = trialDaysLeft(account);
   const checks = getChecksForAccount(account.id);
+  const listings = getListingsForConsumer(account.id);
 
   function handleCancel() {
     cancelMembership(account!.id);
@@ -153,6 +156,65 @@ export default function RenovateDashboard() {
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2 className="mt-10 font-serif text-xl text-ink">Your posted listings</h2>
+      <p className="mt-1 text-sm text-ink-soft">
+        Projects you've posted for contractor bids.
+      </p>
+
+      {listings.length === 0 ? (
+        <div className="mt-4 rounded-2xl border border-dashed border-line bg-paper-raised p-10 text-center">
+          <p className="text-ink-soft">
+            You haven't posted a project for bids yet — do that from the
+            results of a renovation check.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-4 overflow-hidden rounded-2xl border border-line">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-line bg-sand/50 text-left text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                <th className="px-4 py-3">Posted</th>
+                <th className="px-4 py-3">State</th>
+                <th className="px-4 py-3">Scope</th>
+                <th className="px-4 py-3">Budget</th>
+                <th className="px-4 py-3">Bids</th>
+              </tr>
+            </thead>
+            <tbody>
+              {listings.map((l) => {
+                const bidCount = getBidsFor("renovation", l.id).length;
+                return (
+                  <tr key={l.id} className="border-b border-line last:border-0 hover:bg-sand/30">
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/renovate/listings/${l.id}`}
+                        className="block text-ink hover:text-forest"
+                      >
+                        {new Date(l.createdAt).toLocaleDateString()}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-ink-soft">{l.state}</td>
+                    <td className="px-4 py-3 text-ink-soft">
+                      {l.scope.length} item{l.scope.length === 1 ? "" : "s"}
+                    </td>
+                    <td className="px-4 py-3 text-ink-soft">{formatMoney(l.budget)}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          bidCount > 0 ? "bg-clear-bg text-clear" : "bg-sand text-ink-soft"
+                        }`}
+                      >
+                        {bidCount}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

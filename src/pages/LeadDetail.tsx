@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getLeadsForAccount, type Lead } from "../lib/leads";
+import { getBidsFor } from "../lib/bids";
 import ReportView from "../components/ReportView";
 import BuilderEstimateTool from "../components/BuilderEstimateTool";
+import BidForm from "../components/BidForm";
+import BidList from "../components/BidList";
 
 export default function LeadDetail() {
   const { account } = useAuth();
   const { leadId } = useParams();
   const [lead, setLead] = useState<Lead | null | undefined>(undefined);
+  const [, forceRerender] = useState(0);
 
   useEffect(() => {
     if (!account) return;
@@ -51,6 +55,21 @@ export default function LeadDetail() {
             setLead((prev) => (prev ? { ...prev, builderEstimate } : prev))
           }
         />
+      </div>
+
+      <div className="mt-6">
+        <BidForm
+          targetType="lot-check"
+          targetId={lead.report.id}
+          builderAccountId={account.id}
+          builderName={account.businessName}
+          onSubmitted={() => forceRerender((n) => n + 1)}
+        />
+      </div>
+
+      <h2 className="mt-8 font-serif text-xl text-ink">All bids on this lot</h2>
+      <div className="mt-4">
+        <BidList bids={getBidsFor("lot-check", lead.report.id)} viewerBuilderAccountId={account.id} />
       </div>
 
       <div className="mt-6">
