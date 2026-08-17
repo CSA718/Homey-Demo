@@ -5,6 +5,7 @@
 
 import type { LotCheckReport } from "./lotCheck";
 import type { BudgetFit } from "./budgetFit";
+import { storage } from "./storage";
 
 export interface SavedLotCheck {
   id: string;
@@ -23,7 +24,7 @@ function storageKey(accountId: string) {
 
 export function getLotChecksForAccount(accountId: string): SavedLotCheck[] {
   try {
-    const raw = localStorage.getItem(storageKey(accountId));
+    const raw = storage.getItem(storageKey(accountId));
     return raw ? (JSON.parse(raw) as SavedLotCheck[]) : [];
   } catch {
     return [];
@@ -45,6 +46,6 @@ export function saveLotCheck(
     ...input,
   };
   const rest = existing.filter((c) => c.report.id !== input.report.id);
-  localStorage.setItem(storageKey(accountId), JSON.stringify([entry, ...rest]));
+  storage.setItem(storageKey(accountId), JSON.stringify([entry, ...rest]));
   return entry;
 }

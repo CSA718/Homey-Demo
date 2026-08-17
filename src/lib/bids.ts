@@ -5,6 +5,8 @@
 // Covers both target types: a Lot Check report a buyer connected with
 // builders on, and an open Renovation Check listing.
 
+import { storage } from "./storage";
+
 export type BidTargetType = "lot-check" | "renovation";
 
 export interface Bid {
@@ -25,7 +27,7 @@ const ACCEPTED_KEY = "homey_accepted_bids_v1";
 
 function readBids(): Bid[] {
   try {
-    const raw = localStorage.getItem(BIDS_KEY);
+    const raw = storage.getItem(BIDS_KEY);
     return raw ? (JSON.parse(raw) as Bid[]) : [];
   } catch {
     return [];
@@ -33,12 +35,12 @@ function readBids(): Bid[] {
 }
 
 function writeBids(bids: Bid[]) {
-  localStorage.setItem(BIDS_KEY, JSON.stringify(bids));
+  storage.setItem(BIDS_KEY, JSON.stringify(bids));
 }
 
 function readAccepted(): Record<string, string> {
   try {
-    const raw = localStorage.getItem(ACCEPTED_KEY);
+    const raw = storage.getItem(ACCEPTED_KEY);
     return raw ? (JSON.parse(raw) as Record<string, string>) : {};
   } catch {
     return {};
@@ -105,7 +107,7 @@ export function getBidsByBuilder(builderAccountId: string): Bid[] {
 export function acceptBid(targetType: BidTargetType, targetId: string, bidId: string) {
   const accepted = readAccepted();
   accepted[acceptedKey(targetType, targetId)] = bidId;
-  localStorage.setItem(ACCEPTED_KEY, JSON.stringify(accepted));
+  storage.setItem(ACCEPTED_KEY, JSON.stringify(accepted));
 }
 
 export function getAcceptedBidId(targetType: BidTargetType, targetId: string): string | null {

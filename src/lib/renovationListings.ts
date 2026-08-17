@@ -4,6 +4,7 @@
 // pattern used for builder accounts and bids.
 
 import type { HomeAge, RenovationEstimate, RenovationScopeItem } from "./renovation";
+import { storage } from "./storage";
 
 export interface RenovationListing {
   id: string;
@@ -23,7 +24,7 @@ const LISTINGS_KEY = "homey_reno_listings_v1";
 
 function readAll(): RenovationListing[] {
   try {
-    const raw = localStorage.getItem(LISTINGS_KEY);
+    const raw = storage.getItem(LISTINGS_KEY);
     return raw ? (JSON.parse(raw) as RenovationListing[]) : [];
   } catch {
     return [];
@@ -31,7 +32,7 @@ function readAll(): RenovationListing[] {
 }
 
 function writeAll(listings: RenovationListing[]) {
-  localStorage.setItem(LISTINGS_KEY, JSON.stringify(listings));
+  storage.setItem(LISTINGS_KEY, JSON.stringify(listings));
 }
 
 export function createListing(

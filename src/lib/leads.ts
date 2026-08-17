@@ -6,6 +6,7 @@
 import { generateModeledReport, type LotCheckReport } from "./lotCheck";
 import { computeBudgetFit, type BudgetFit, type BuildTier } from "./budgetFit";
 import type { BuilderEstimate } from "./costEstimate";
+import { storage } from "./storage";
 
 export type LeadStatus = "new" | "contacted" | "bid_sent" | "won" | "lost";
 
@@ -107,13 +108,13 @@ function storageKey(accountId: string) {
 
 export function getLeadsForAccount(accountId: string): Lead[] {
   try {
-    const raw = localStorage.getItem(storageKey(accountId));
+    const raw = storage.getItem(storageKey(accountId));
     if (raw) return JSON.parse(raw) as Lead[];
   } catch {
     // fall through to reseed
   }
   const seeded = seedLeadsForAccount(accountId);
-  localStorage.setItem(storageKey(accountId), JSON.stringify(seeded));
+  storage.setItem(storageKey(accountId), JSON.stringify(seeded));
   return seeded;
 }
 
@@ -125,7 +126,7 @@ export function updateLeadStatus(
   const leads = getLeadsForAccount(accountId).map((lead) =>
     lead.id === leadId ? { ...lead, status } : lead,
   );
-  localStorage.setItem(storageKey(accountId), JSON.stringify(leads));
+  storage.setItem(storageKey(accountId), JSON.stringify(leads));
   return leads;
 }
 
@@ -137,7 +138,7 @@ export function updateBuilderEstimate(
   const leads = getLeadsForAccount(accountId).map((lead) =>
     lead.id === leadId ? { ...lead, builderEstimate } : lead,
   );
-  localStorage.setItem(storageKey(accountId), JSON.stringify(leads));
+  storage.setItem(storageKey(accountId), JSON.stringify(leads));
   return leads;
 }
 
@@ -166,6 +167,6 @@ export function addConnectionLead(
     budgetFit: buyer.budgetFit,
   };
   const updated = [lead, ...existing];
-  localStorage.setItem(storageKey(builderAccountId), JSON.stringify(updated));
+  storage.setItem(storageKey(builderAccountId), JSON.stringify(updated));
   return lead;
 }

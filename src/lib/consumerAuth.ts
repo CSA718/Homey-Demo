@@ -7,6 +7,8 @@
 // simple non-cryptographic checksum, adequate only because this data
 // never leaves the browser.
 
+import { storage } from "./storage";
+
 const TRIAL_DAYS = 7;
 
 export interface ConsumerAccount {
@@ -37,7 +39,7 @@ function hashPassword(password: string): string {
 
 function readAccounts(): StoredConsumerAccount[] {
   try {
-    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    const raw = storage.getItem(ACCOUNTS_KEY);
     return raw ? (JSON.parse(raw) as StoredConsumerAccount[]) : [];
   } catch {
     return [];
@@ -45,7 +47,7 @@ function readAccounts(): StoredConsumerAccount[] {
 }
 
 function writeAccounts(accounts: StoredConsumerAccount[]) {
-  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+  storage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
 }
 
 function toPublic(account: StoredConsumerAccount): ConsumerAccount {
@@ -86,7 +88,7 @@ export function signUp(
   };
   accounts.push(account);
   writeAccounts(accounts);
-  localStorage.setItem(SESSION_KEY, account.id);
+  storage.setItem(SESSION_KEY, account.id);
   window.dispatchEvent(new Event("homey-consumer-auth-change"));
   return { account: toPublic(account) };
 }
@@ -101,18 +103,18 @@ export function logIn(
   if (!account || account.passwordHash !== hashPassword(password)) {
     return { error: "No account matches that email and password." };
   }
-  localStorage.setItem(SESSION_KEY, account.id);
+  storage.setItem(SESSION_KEY, account.id);
   window.dispatchEvent(new Event("homey-consumer-auth-change"));
   return { account: toPublic(account) };
 }
 
 export function logOut() {
-  localStorage.removeItem(SESSION_KEY);
+  storage.removeItem(SESSION_KEY);
   window.dispatchEvent(new Event("homey-consumer-auth-change"));
 }
 
 export function getSession(): ConsumerAccount | null {
-  const id = localStorage.getItem(SESSION_KEY);
+  const id = storage.getItem(SESSION_KEY);
   if (!id) return null;
   const account = readAccounts().find((a) => a.id === id);
   return account ? toPublic(account) : null;

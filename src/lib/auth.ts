@@ -3,6 +3,8 @@
 // non-cryptographic checksum, adequate only because this data never leaves
 // the browser; it is not a real auth system.
 
+import { storage } from "./storage";
+
 export interface BuilderAccount {
   id: string;
   businessName: string;
@@ -28,7 +30,7 @@ function hashPassword(password: string): string {
 
 function readAccounts(): StoredAccount[] {
   try {
-    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    const raw = storage.getItem(ACCOUNTS_KEY);
     return raw ? (JSON.parse(raw) as StoredAccount[]) : [];
   } catch {
     return [];
@@ -36,7 +38,7 @@ function readAccounts(): StoredAccount[] {
 }
 
 function writeAccounts(accounts: StoredAccount[]) {
-  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+  storage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
 }
 
 function toPublic(account: StoredAccount): BuilderAccount {
@@ -65,7 +67,7 @@ export function signUp(
   };
   accounts.push(account);
   writeAccounts(accounts);
-  localStorage.setItem(SESSION_KEY, account.id);
+  storage.setItem(SESSION_KEY, account.id);
   window.dispatchEvent(new Event("homey-auth-change"));
   return { account: toPublic(account) };
 }
@@ -80,18 +82,18 @@ export function logIn(
   if (!account || account.passwordHash !== hashPassword(password)) {
     return { error: "No account matches that email and password." };
   }
-  localStorage.setItem(SESSION_KEY, account.id);
+  storage.setItem(SESSION_KEY, account.id);
   window.dispatchEvent(new Event("homey-auth-change"));
   return { account: toPublic(account) };
 }
 
 export function logOut() {
-  localStorage.removeItem(SESSION_KEY);
+  storage.removeItem(SESSION_KEY);
   window.dispatchEvent(new Event("homey-auth-change"));
 }
 
 export function getSession(): BuilderAccount | null {
-  const id = localStorage.getItem(SESSION_KEY);
+  const id = storage.getItem(SESSION_KEY);
   if (!id) return null;
   const account = readAccounts().find((a) => a.id === id);
   return account ? toPublic(account) : null;

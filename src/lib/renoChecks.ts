@@ -2,6 +2,7 @@
 // leads.ts: no backend, everything lives in localStorage keyed by account id.
 
 import type { HomeAge, RenovationEstimate, RenovationScopeItem } from "./renovation";
+import { storage } from "./storage";
 
 export interface SavedRenovationCheck {
   id: string;
@@ -22,7 +23,7 @@ function storageKey(accountId: string) {
 
 export function getChecksForAccount(accountId: string): SavedRenovationCheck[] {
   try {
-    const raw = localStorage.getItem(storageKey(accountId));
+    const raw = storage.getItem(storageKey(accountId));
     return raw ? (JSON.parse(raw) as SavedRenovationCheck[]) : [];
   } catch {
     return [];
@@ -44,6 +45,6 @@ export function saveCheck(
     ...input,
   };
   const existing = getChecksForAccount(accountId);
-  localStorage.setItem(storageKey(accountId), JSON.stringify([check, ...existing]));
+  storage.setItem(storageKey(accountId), JSON.stringify([check, ...existing]));
   return check;
 }
