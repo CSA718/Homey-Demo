@@ -114,23 +114,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Two audiences */}
+      {/* Three audiences */}
       <section className="mx-auto max-w-6xl px-6 py-20">
         <h2 className="font-serif text-2xl text-ink sm:text-3xl">
-          One screening. Two ways to use it.
+          Three ways to use Homey.
         </h2>
-        <div className="mt-10 grid gap-8 lg:grid-cols-2">
+        <div className="mt-10 grid gap-8 lg:grid-cols-3">
           <div className="flex flex-col rounded-2xl border border-line bg-paper-raised p-8">
             <p className="text-xs font-semibold uppercase tracking-wide text-forest">
-              For buyers
+              For buyers, before you build
             </p>
             <h3 className="mt-2 font-serif text-2xl text-ink">Lot Check</h3>
             <p className="mt-3 flex-1 text-ink-soft">
               A buildability screening on a specific parcel: wetlands and
               buffers, nitrogen-sensitive area (I/A septic trigger), flood
               zone, soil drainage class, zoning and setbacks, priority
-              habitat, and wellhead protection. A two-page report on whether
-              the lot works — and what the surprises will cost.
+              habitat, and wellhead protection.
             </p>
             <div className="mt-6 flex items-baseline gap-2">
               <span className="font-serif text-3xl text-ink">$25</span>
@@ -144,15 +143,37 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="flex flex-col rounded-2xl border border-line bg-paper-raised p-8">
+          <div className="flex flex-col rounded-2xl border border-clay/40 bg-clay/5 p-8">
             <p className="text-xs font-semibold uppercase tracking-wide text-clay">
+              For homeowners, after you build
+            </p>
+            <h3 className="mt-2 font-serif text-2xl text-ink">Renovation Check</h3>
+            <p className="mt-3 flex-1 text-ink-soft">
+              Set a budget and check off the scope of work — kitchen, roof,
+              HVAC, whatever's on the list — for any home, new or old. Get
+              the likelihood it fits, adjusted for your state.
+            </p>
+            <div className="mt-6 flex items-baseline gap-2">
+              <span className="font-serif text-3xl text-ink">$25</span>
+              <span className="text-sm text-ink-soft">/mo · 7-day free trial</span>
+            </div>
+            <Link
+              to="/renovate"
+              className="mt-6 rounded-full border border-clay px-6 py-3 text-center text-sm font-semibold text-clay transition-colors hover:bg-clay hover:text-paper"
+            >
+              Check a renovation
+            </Link>
+          </div>
+
+          <div className="flex flex-col rounded-2xl border border-line bg-paper-raised p-8">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
               For builders
             </p>
             <h3 className="mt-2 font-serif text-2xl text-ink">Membership</h3>
             <p className="mt-3 flex-1 text-ink-soft">
               Route your unqualified inquiries to Homey instead of burning
               estimator hours on them. Whoever comes back has a verified lot
-              and a real budget — you only spend time on leads worth having.
+              and a real budget.
             </p>
             <div className="mt-6 flex items-baseline gap-2">
               <span className="font-serif text-3xl text-ink">$499</span>
@@ -160,7 +181,7 @@ export default function Home() {
             </div>
             <Link
               to="/builders"
-              className="mt-6 rounded-full border border-clay px-6 py-3 text-center text-sm font-semibold text-clay transition-colors hover:bg-clay hover:text-paper"
+              className="mt-6 rounded-full border border-line px-6 py-3 text-center text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
             >
               See builder membership
             </Link>

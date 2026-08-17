@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RenoProtectedRoute from "./components/RenoProtectedRoute";
 import Home from "./pages/Home";
 import LotCheck from "./pages/LotCheck";
 import Checkout from "./pages/Checkout";
@@ -10,6 +11,11 @@ import HowItWorks from "./pages/HowItWorks";
 import BuilderLogin from "./pages/BuilderLogin";
 import Dashboard from "./pages/Dashboard";
 import LeadDetail from "./pages/LeadDetail";
+import Renovate from "./pages/Renovate";
+import RenovateLogin from "./pages/RenovateLogin";
+import RenovateCheck from "./pages/RenovateCheck";
+import RenovateDashboard from "./pages/RenovateDashboard";
+import RenovateCheckDetail from "./pages/RenovateCheckDetail";
 
 function App() {
   return (
@@ -36,6 +42,32 @@ function App() {
             <ProtectedRoute>
               <LeadDetail />
             </ProtectedRoute>
+          }
+        />
+        <Route path="/renovate" element={<Renovate />} />
+        <Route path="/renovate/login" element={<RenovateLogin />} />
+        <Route
+          path="/renovate/check"
+          element={
+            <RenoProtectedRoute>
+              <RenovateCheck />
+            </RenoProtectedRoute>
+          }
+        />
+        <Route
+          path="/renovate/dashboard"
+          element={
+            <RenoProtectedRoute>
+              <RenovateDashboard />
+            </RenoProtectedRoute>
+          }
+        />
+        <Route
+          path="/renovate/checks/:checkId"
+          element={
+            <RenoProtectedRoute>
+              <RenovateCheckDetail />
+            </RenoProtectedRoute>
           }
         />
       </Route>

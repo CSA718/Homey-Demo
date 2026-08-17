@@ -4,12 +4,15 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
+import { RenoAuthProvider } from "./context/RenoAuthContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <RenoAuthProvider>
+          <App />
+        </RenoAuthProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

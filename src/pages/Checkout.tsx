@@ -2,9 +2,13 @@ import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { signUp } from "../lib/auth";
 import { useAuth } from "../context/AuthContext";
+import { signUp as renoSignUp } from "../lib/renoAuth";
+import { useRenoAuth } from "../context/RenoAuthContext";
 import { US_STATES } from "../lib/lotCheck";
 
 const MEMBERSHIP_PRICE = 499;
+const RENO_PRICE = 25;
+const RENO_TRIAL_DAYS = 7;
 
 function formatCardNumber(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 16);
@@ -21,8 +25,11 @@ export default function Checkout() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { refresh } = useAuth();
+  const { refresh: refreshReno } = useRenoAuth();
 
-  const type = params.get("type") === "membership" ? "membership" : "lotcheck";
+  const rawType = params.get("type");
+  const type =
+    rawType === "membership" ? "membership" : rawType === "reno-trial" ? "reno-trial" : "lotcheck";
 
   // Lot Check params
   const address = params.get("address") ?? "";
@@ -32,6 +39,7 @@ export default function Checkout() {
 
   const [businessName, setBusinessName] = useState("");
   const [serviceState, setServiceState] = useState("");
+  const [renoName, setRenoName] = useState("");
   const [email, setEmail] = useState(lotCheckEmail);
   const [password, setPassword] = useState("");
   const [cardName, setCardName] = useState("");
@@ -41,12 +49,15 @@ export default function Checkout() {
   const [status, setStatus] = useState<"form" | "processing" | "error">("form");
   const [error, setError] = useState<string | null>(null);
 
-  const amount = type === "lotcheck" ? 25 : MEMBERSHIP_PRICE;
-  const title = type === "lotcheck" ? "Lot Check" : "Homey Membership";
+  const amount = type === "lotcheck" ? 25 : type === "reno-trial" ? RENO_PRICE : MEMBERSHIP_PRICE;
+  const title =
+    type === "lotcheck" ? "Lot Check" : type === "reno-trial" ? "Renovation Check Membership" : "Homey Membership";
   const subtitle =
     type === "lotcheck"
       ? `${address}, ${city}, ${state}`
-      : "Flat rate, billed monthly";
+      : type === "reno-trial"
+        ? `${RENO_TRIAL_DAYS}-day free trial, then billed monthly`
+        : "Flat rate, billed monthly";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,6 +66,12 @@ export default function Checkout() {
     if (type === "membership") {
       if (!businessName.trim() || !serviceState || !email.trim() || password.length < 4) {
         setError("Fill in your business name, service area, email, and a password (4+ characters).");
+        return;
+      }
+    }
+    if (type === "reno-trial") {
+      if (!renoName.trim() || !email.trim() || password.length < 4) {
+        setError("Fill in your name, email, and a password (4+ characters).");
         return;
       }
     }
@@ -71,6 +88,17 @@ export default function Checkout() {
         }
         refresh();
         navigate("/dashboard");
+        return;
+      }
+      if (type === "reno-trial") {
+        const result = renoSignUp(renoName, email, password);
+        if ("error" in result) {
+          setStatus("form");
+          setError(result.error);
+          return;
+        }
+        refreshReno();
+        navigate("/renovate/check");
         return;
       }
       const reportParams = new URLSearchParams(params);
@@ -94,7 +122,9 @@ export default function Checkout() {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center px-6 py-32 text-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-forest" />
-        <p className="mt-6 font-serif text-xl text-ink">Processing payment…</p>
+        <p className="mt-6 font-serif text-xl text-ink">
+          {type === "reno-trial" ? "Setting up your free trial…" : "Processing payment…"}
+        </p>
         <p className="mt-2 text-sm text-ink-soft">
           This is a demo — no real card is charged.
         </p>
@@ -115,12 +145,69 @@ export default function Checkout() {
           <p className="text-sm text-ink-soft">{subtitle}</p>
         </div>
         <p className="font-serif text-2xl text-ink">
-          ${amount.toLocaleString("en-US")}
-          {type === "membership" && <span className="text-sm text-ink-soft">/mo</span>}
+          {type === "reno-trial" ? (
+            <>
+              $0 <span className="text-sm text-ink-soft">today</span>
+            </>
+          ) : (
+            <>
+              ${amount.toLocaleString("en-US")}
+              {type === "membership" && <span className="text-sm text-ink-soft">/mo</span>}
+            </>
+          )}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        {type === "reno-trial" && (
+          <>
+            <div>
+              <label htmlFor="renoName" className="block text-sm font-medium text-ink">
+                Your name
+              </label>
+              <input
+                id="renoName"
+                type="text"
+                required
+                value={renoName}
+                onChange={(e) => setRenoName(e.target.value)}
+                placeholder="Jordan Silva"
+                className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+              />
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-ink">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-ink">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 4 characters"
+                  className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+                />
+              </div>
+            </div>
+          </>
+        )}
+
         {type === "membership" && (
           <>
             <div>
@@ -197,6 +284,12 @@ export default function Checkout() {
 
         <div className="border-t border-line pt-5">
           <p className="text-sm font-semibold text-ink">Card details</p>
+          {type === "reno-trial" && (
+            <p className="mt-1 text-xs text-ink-soft">
+              You won't be charged today. Your card is billed ${RENO_PRICE}/mo
+              starting {RENO_TRIAL_DAYS} days from now, unless you cancel first.
+            </p>
+          )}
           <div className="mt-3 space-y-4">
             <input
               type="text"
@@ -246,8 +339,9 @@ export default function Checkout() {
           type="submit"
           className="w-full rounded-full bg-forest px-6 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
         >
-          Pay ${amount.toLocaleString("en-US")}
-          {type === "membership" ? "/mo" : ""}
+          {type === "reno-trial"
+            ? `Start ${RENO_TRIAL_DAYS}-day free trial`
+            : `Pay $${amount.toLocaleString("en-US")}${type === "membership" ? "/mo" : ""}`}
         </button>
         <p className="text-center text-xs text-ink-soft">
           Demo checkout. No card is validated or charged, and nothing is sent

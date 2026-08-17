@@ -20,6 +20,16 @@ margin. Buyers can also add home specifications (bedrooms, bathrooms,
 stories, garage, style, notes) and see an illustrative floor plan computed
 from those actual inputs, right on the report.
 
+Separately, **Renovation Check** ($25/mo, 7-day free trial) is for anyone
+who already owns — or is buying as-is — a home, new or old. A homeowner
+sets a budget and checks off a scope of work across 14 categories (kitchen,
+bathroom, room addition, basement, roof, deck, windows/doors, flooring,
+siding, HVAC, electrical, fireplace, painting, whole-home renovation), and
+gets back a likelihood their budget covers it, scaled by their state's
+renovation cost index and a contingency for the home's age. It's a
+separate membership from Lot Check/builder membership, with its own
+consumer accounts, trial/subscription state, and saved check history.
+
 ## What's real vs. simulated
 
 - **Flood zone data is live, nationwide.** The Lot Check flow geocodes the
@@ -95,6 +105,28 @@ from those actual inputs, right on the report.
   attached garage drawn to scale. It's still illustrative — room adjacency
   and proportions are approximated for concept purposes, not designed by an
   architect. (`src/lib/floorPlan.ts`, `src/components/FloorPlanPreview.tsx`)
+- **Renovation Check's cost ranges are grounded in real 2026 cost-guide
+  data, and its state index reuses this app's existing methodology.**
+  Per-category national dollar ranges (kitchen $20k–$80k, bathroom
+  $9k–$30k/bath, roof $5–$11/sq ft, HVAC $8k–$22k, etc.) come from 2026
+  contractor-cost industry surveys (Angi, HomeAdvisor/Modernize, Fixr, This
+  Old House, Zonda's Cost vs Value report). Those sources disagree with
+  each other on precise per-state dollars — they're SEO content, not a
+  government index — but agree on which states run consistently above or
+  below the national average (Hawaii/California/Northeast highest,
+  Mississippi/Arkansas/Oklahoma/Alabama lowest, ~2.5x spread). Rather than
+  presenting a false-precision number from any one source,
+  `STATE_RENOVATION_COST_INDEX` reuses this app's existing ZHVI-derived
+  state economic ordering (the same one behind `STATE_LAND_RATE_PER_ACRE`),
+  compressed to match that real, narrower spread. A contingency percentage
+  (5–22%) is added based on the home's age bracket, since older homes more
+  often turn up hidden costs once work starts. (`src/lib/renovation.ts`)
+- **Renovation Check membership is a separate local demo account system
+  from builder accounts**, with its own signup/login, a mocked 7-day trial
+  → $25/mo subscription state (trialing/active/canceled, computed from a
+  stored trial-end date — no real billing), and a saved history of every
+  check run, all in `localStorage`. (`src/lib/renoAuth.ts`,
+  `src/lib/renoChecks.ts`, `src/context/RenoAuthContext.tsx`)
 
 ## Pages
 
@@ -112,6 +144,15 @@ from those actual inputs, right on the report.
   full Lot Check report
 - `/how-it-works` — data sources, the automation + human-review pipeline,
   disclaimers
+- `/renovate` — Renovation Check marketing page, $25/mo with a 7-day free
+  trial
+- `/renovate/login` — login for existing Renovation Check members
+- `/renovate/check` — protected: budget + scope-of-work form and the
+  resulting estimate
+- `/renovate/dashboard` — protected: subscription status, trial countdown,
+  and saved check history
+- `/renovate/checks/:checkId` — protected: a single saved renovation
+  estimate
 
 ## Stack
 
