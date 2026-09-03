@@ -1,14 +1,10 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { signUp } from "../lib/auth";
 import { useAuth } from "../context/AuthContext";
-import { signUp as consumerSignUp } from "../lib/consumerAuth";
-import { useConsumerAuth } from "../context/ConsumerAuthContext";
 import { US_STATES } from "../lib/lotCheck";
 
 const MEMBERSHIP_PRICE = 499;
-const CONSUMER_PRICE = 25;
-const TRIAL_DAYS = 7;
 
 function formatCardNumber(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 16);
@@ -21,19 +17,16 @@ function formatExpiry(value: string) {
   return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 }
 
+// Builder membership checkout. Both consumer tools (Lot Check and
+// Renovation Check) are free — see /lot-check, /renovate/check, and the
+// free /account/signup flow — so this page is builder-only.
 export default function Checkout() {
-  const [params] = useSearchParams();
   const navigate = useNavigate();
   const { refresh } = useAuth();
-  const { refresh: refreshConsumer } = useConsumerAuth();
-
-  const type = params.get("type") === "membership" ? "membership" : "consumer-trial";
-  const prefillEmail = params.get("email") ?? "";
 
   const [businessName, setBusinessName] = useState("");
   const [serviceState, setServiceState] = useState("");
-  const [consumerName, setConsumerName] = useState("");
-  const [email, setEmail] = useState(prefillEmail);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cardName, setCardName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
@@ -42,46 +35,18 @@ export default function Checkout() {
   const [status, setStatus] = useState<"form" | "processing" | "error">("form");
   const [error, setError] = useState<string | null>(null);
 
-  const amount = type === "membership" ? MEMBERSHIP_PRICE : CONSUMER_PRICE;
-  const title = type === "membership" ? "Homey Builder Membership" : "Homey Membership";
-  const subtitle =
-    type === "membership" ? "Flat rate, billed monthly" : `${TRIAL_DAYS}-day free trial, then billed monthly`;
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (type === "membership") {
-      if (!businessName.trim() || !serviceState || !email.trim() || password.length < 4) {
-        setError("Fill in your business name, service area, email, and a password (4+ characters).");
-        return;
-      }
-    } else {
-      if (!consumerName.trim() || !email.trim() || password.length < 4) {
-        setError("Fill in your name, email, and a password (4+ characters).");
-        return;
-      }
+    if (!businessName.trim() || !serviceState || !email.trim() || password.length < 4) {
+      setError("Fill in your business name, service area, email, and a password (4+ characters).");
+      return;
     }
 
     setStatus("processing");
 
-    if (type === "membership") {
-      const result = await signUp(businessName, email, password, serviceState);
-      if ("error" in result) {
-        setStatus("form");
-        setError(result.error);
-        return;
-      }
-      if ("pendingConfirmation" in result) {
-        setStatus("form");
-        setError("Check your email to confirm your account, then log in.");
-        return;
-      }
-      refresh();
-      navigate("/dashboard");
-      return;
-    }
-    const result = await consumerSignUp(consumerName, email, password);
+    const result = await signUp(businessName, email, password, serviceState);
     if ("error" in result) {
       setStatus("form");
       setError(result.error);
@@ -92,17 +57,15 @@ export default function Checkout() {
       setError("Check your email to confirm your account, then log in.");
       return;
     }
-    refreshConsumer();
-    navigate("/renovate/check");
+    refresh();
+    navigate("/dashboard");
   }
 
   if (status === "processing") {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center px-6 py-32 text-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-forest" />
-        <p className="mt-6 font-serif text-xl text-ink">
-          {type === "consumer-trial" ? "Setting up your free trial…" : "Processing payment…"}
-        </p>
+        <p className="mt-6 font-serif text-xl text-ink">Processing payment…</p>
         <p className="mt-2 text-sm text-ink-soft">
           Your account is real — no real card is charged.
         </p>
@@ -119,155 +82,88 @@ export default function Checkout() {
 
       <div className="mt-6 flex items-center justify-between rounded-xl border border-line bg-paper-raised p-5">
         <div>
-          <p className="font-semibold text-ink">{title}</p>
-          <p className="text-sm text-ink-soft">{subtitle}</p>
+          <p className="font-semibold text-ink">Homey Builder Membership</p>
+          <p className="text-sm text-ink-soft">Flat rate, billed monthly</p>
         </div>
         <p className="font-serif text-2xl text-ink">
-          {type === "consumer-trial" ? (
-            <>
-              $0 <span className="text-sm text-ink-soft">today</span>
-            </>
-          ) : (
-            <>
-              ${amount.toLocaleString("en-US")}
-              <span className="text-sm text-ink-soft">/mo</span>
-            </>
-          )}
+          ${MEMBERSHIP_PRICE.toLocaleString("en-US")}
+          <span className="text-sm text-ink-soft">/mo</span>
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-        {type === "consumer-trial" && (
-          <>
-            <div>
-              <label htmlFor="consumerName" className="block text-sm font-medium text-ink">
-                Your name
-              </label>
-              <input
-                id="consumerName"
-                type="text"
-                required
-                value={consumerName}
-                onChange={(e) => setConsumerName(e.target.value)}
-                placeholder="Jordan Silva"
-                className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-              />
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-ink">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-ink">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 4 characters"
-                  className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {type === "membership" && (
-          <>
-            <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-ink">
-                Business name
-              </label>
-              <input
-                id="businessName"
-                type="text"
-                required
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Fearing Hill Builders"
-                className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-              />
-            </div>
-            <div>
-              <label htmlFor="serviceState" className="block text-sm font-medium text-ink">
-                Primary service area (state)
-              </label>
-              <select
-                id="serviceState"
-                required
-                value={serviceState}
-                onChange={(e) => setServiceState(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-              >
-                <option value="" disabled>
-                  Select a state
-                </option>
-                {US_STATES.map((s) => (
-                  <option key={s.code} value={s.code}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-ink-soft">
-                Buyers running a Lot Check in this state can connect with you
-                directly.
-              </p>
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-ink">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@builder.com"
-                  className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-ink">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 4 characters"
-                  className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
-                />
-              </div>
-            </div>
-          </>
-        )}
+        <div>
+          <label htmlFor="businessName" className="block text-sm font-medium text-ink">
+            Business name
+          </label>
+          <input
+            id="businessName"
+            type="text"
+            required
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            placeholder="Fearing Hill Builders"
+            className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+          />
+        </div>
+        <div>
+          <label htmlFor="serviceState" className="block text-sm font-medium text-ink">
+            Primary service area (state)
+          </label>
+          <select
+            id="serviceState"
+            required
+            value={serviceState}
+            onChange={(e) => setServiceState(e.target.value)}
+            className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+          >
+            <option value="" disabled>
+              Select a state
+            </option>
+            {US_STATES.map((s) => (
+              <option key={s.code} value={s.code}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-ink-soft">
+            Buyers running a Lot Check in this state can connect with you
+            directly.
+          </p>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-ink">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@builder.com"
+              className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-ink">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 4 characters"
+              className="mt-2 w-full rounded-lg border border-line bg-paper-raised px-4 py-2.5 text-ink placeholder:text-ink-soft/50 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+            />
+          </div>
+        </div>
 
         <div className="border-t border-line pt-5">
           <p className="text-sm font-semibold text-ink">Card details</p>
-          {type === "consumer-trial" && (
-            <p className="mt-1 text-xs text-ink-soft">
-              You won't be charged today. Your card is billed ${CONSUMER_PRICE}/mo
-              starting {TRIAL_DAYS} days from now, unless you cancel first.
-            </p>
-          )}
           <div className="mt-3 space-y-4">
             <input
               type="text"
@@ -317,9 +213,7 @@ export default function Checkout() {
           type="submit"
           className="w-full rounded-full bg-forest px-6 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
         >
-          {type === "consumer-trial"
-            ? `Start ${TRIAL_DAYS}-day free trial`
-            : `Pay $${amount.toLocaleString("en-US")}/mo`}
+          Pay ${MEMBERSHIP_PRICE.toLocaleString("en-US")}/mo
         </button>
         <p className="text-center text-xs text-ink-soft">
           Your account is created for real. Card details aren't validated,

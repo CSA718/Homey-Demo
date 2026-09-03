@@ -16,6 +16,7 @@ import Renovate from "./pages/Renovate";
 import RenovateCheck from "./pages/RenovateCheck";
 import RenovationJobDetail from "./pages/RenovationJobDetail";
 import AccountLogin from "./pages/AccountLogin";
+import AccountSignup from "./pages/AccountSignup";
 import Account from "./pages/Account";
 import LotCheckHistoryDetail from "./pages/LotCheckHistoryDetail";
 import RenovationCheckDetail from "./pages/RenovationCheckDetail";
@@ -58,15 +59,9 @@ function App() {
           }
         />
         <Route path="/renovate" element={<Renovate />} />
-        <Route
-          path="/renovate/check"
-          element={
-            <ConsumerProtectedRoute>
-              <RenovateCheck />
-            </ConsumerProtectedRoute>
-          }
-        />
+        <Route path="/renovate/check" element={<RenovateCheck />} />
         <Route path="/account/login" element={<AccountLogin />} />
+        <Route path="/account/signup" element={<AccountSignup />} />
         <Route
           path="/account"
           element={

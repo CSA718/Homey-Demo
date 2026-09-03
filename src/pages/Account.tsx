@@ -1,30 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useConsumerAuth } from "../context/ConsumerAuthContext";
-import {
-  getSubscriptionState,
-  trialDaysLeft,
-  cancelMembership,
-  resumeMembership,
-} from "../lib/consumerAuth";
 import { getLotChecksForAccount, type SavedLotCheck } from "../lib/lotCheckHistory";
 import { getChecksForAccount, type SavedRenovationCheck } from "../lib/renoChecks";
 import { getListingsForConsumer, type RenovationListing } from "../lib/renovationListings";
 import { getBidsForTargets } from "../lib/bids";
 import VerdictBadge from "../components/VerdictBadge";
 
-const STATUS_BADGE: Record<string, string> = {
-  trialing: "bg-caution-bg text-caution border-caution/30",
-  active: "bg-clear-bg text-clear border-clear/30",
-  canceled: "bg-sand text-ink-soft border-line",
-};
-
 function formatMoney(n: number) {
   return `$${Math.round(n).toLocaleString("en-US")}`;
 }
 
 export default function Account() {
-  const { account, refresh, logOut } = useConsumerAuth();
+  const { account, logOut } = useConsumerAuth();
   const navigate = useNavigate();
   const [lotChecks, setLotChecks] = useState<SavedLotCheck[]>([]);
   const [renoChecks, setRenoChecks] = useState<SavedRenovationCheck[]>([]);
@@ -64,27 +52,12 @@ export default function Account() {
 
   if (!account) return null;
 
-  const subState = getSubscriptionState(account);
-  const daysLeft = trialDaysLeft(account);
-
-  async function handleCancel() {
-    if (!account) return;
-    await cancelMembership(account.id);
-    refresh();
-  }
-
-  async function handleResume() {
-    if (!account) return;
-    await resumeMembership(account.id);
-    refresh();
-  }
-
   return (
     <div className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-            Homey Membership
+            Homey Account · Free
           </p>
           <h1 className="mt-1 font-serif text-2xl text-ink sm:text-3xl">
             Welcome back, {account.name.split(" ")[0]}
@@ -109,40 +82,6 @@ export default function Account() {
             Log out
           </button>
         </div>
-      </div>
-
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-paper-raised p-6">
-        <div>
-          <span
-            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${STATUS_BADGE[subState]}`}
-          >
-            {subState === "trialing" && `Free trial — ${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
-            {subState === "active" && "Active member — $25/mo"}
-            {subState === "canceled" && "Membership canceled"}
-          </span>
-          <p className="mt-2 text-sm text-ink-soft">
-            {subState === "trialing" &&
-              `Your card won't be charged until your trial ends on ${new Date(account.trialEndsAt).toLocaleDateString()}. Covers unlimited Renovation Checks (Lot Check is always free).`}
-            {subState === "active" && "Billed $25/mo flat — unlimited Renovation Checks. Cancel anytime. (Lot Check is always free.)"}
-            {subState === "canceled" &&
-              "You can keep running Renovation Checks until the end of your current period — Lot Check stays free either way. Resume anytime."}
-          </p>
-        </div>
-        {subState === "canceled" ? (
-          <button
-            onClick={handleResume}
-            className="rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
-          >
-            Resume membership
-          </button>
-        ) : (
-          <button
-            onClick={handleCancel}
-            className="rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink-soft transition-colors hover:border-flag hover:text-flag"
-          >
-            Cancel membership
-          </button>
-        )}
       </div>
 
       <div className="mt-8 flex items-center justify-between">

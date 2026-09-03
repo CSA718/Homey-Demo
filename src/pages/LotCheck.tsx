@@ -58,7 +58,7 @@ export default function LotCheck() {
         zoning, priority habitat, and wellhead protection data — and compare
         your budget against a realistic estimated build cost for this lot.
         {!account &&
-          " No signup, no card, no catch — the report is yours instantly. Want to save your history or connect with a builder? You can log in or start a Homey Membership from the report page."}
+          " No signup, no card, no catch — the report is yours instantly. Want to save your history or connect with a builder? You can create a free account from the report page."}
       </p>
 
       <form

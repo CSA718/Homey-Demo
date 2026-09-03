@@ -1,16 +1,13 @@
 import { Link } from "react-router-dom";
 import { RENOVATION_CATEGORIES } from "../lib/renovation";
 
-const TRIAL_DAYS = 7;
-const RENO_PRICE = 25;
-
 export default function Renovate() {
   return (
     <div>
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pt-16 pb-16 sm:pt-24">
         <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-          Renovation Check · New
+          Renovation Check · Free
         </span>
         <h1 className="mt-6 max-w-2xl font-serif text-4xl leading-tight text-ink sm:text-5xl">
           Already own a home? Check your renovation budget before you call a contractor.
@@ -23,10 +20,10 @@ export default function Renovate() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            to="/checkout?type=consumer-trial"
+            to="/renovate/check"
             className="rounded-full bg-forest px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
           >
-            Start your {TRIAL_DAYS}-day free trial
+            Check your renovation — free
           </Link>
           <Link
             to="/account/login"
@@ -36,7 +33,8 @@ export default function Renovate() {
           </Link>
         </div>
         <p className="mt-3 text-sm text-ink-soft">
-          ${RENO_PRICE}/mo after your free trial. Cancel anytime.
+          No account, no card, no catch. A free account saves your history
+          and lets you post the job for contractor bids.
         </p>
       </section>
 
@@ -45,10 +43,10 @@ export default function Renovate() {
         <div className="mx-auto max-w-6xl px-6 py-12">
           <p className="max-w-3xl text-ink-soft">
             Buying raw land instead? <Link to="/lot-check" className="font-semibold text-forest hover:underline">Lot Check</Link> screens
-            a parcel's buildability — completely free, no account needed.
-            Renovation Check is for a home you already own or are buying
-            as-is, brand new or decades old, and any scope of work on it —
-            that's the $25/mo Homey Membership below.
+            a parcel's buildability — also completely free, no account
+            needed. Renovation Check is for a home you already own or are
+            buying as-is, brand new or decades old, and any scope of work
+            on it.
           </p>
         </div>
       </section>
@@ -103,34 +101,39 @@ export default function Renovate() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Free account */}
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-serif text-2xl text-ink sm:text-3xl">Homey Membership</h2>
+        <h2 className="font-serif text-2xl text-ink sm:text-3xl">Renovation Check is free.</h2>
         <div className="mx-auto mt-8 max-w-md rounded-2xl border-2 border-clay bg-paper-raised p-8">
-          <p className="text-sm font-semibold text-clay">{TRIAL_DAYS}-day free trial</p>
+          <p className="text-sm font-semibold text-clay">No card, no trial, no catch</p>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="font-serif text-4xl text-ink">${RENO_PRICE}</span>
-            <span className="text-sm text-ink-soft">/mo after trial</span>
+            <span className="font-serif text-4xl text-ink">$0</span>
+            <span className="text-sm text-ink-soft">forever</span>
           </div>
           <ul className="mt-6 space-y-3 text-sm text-ink-soft">
-            <li>· Unlimited Renovation Checks</li>
+            <li>· Unlimited Renovation Checks, no account needed</li>
             <li>· State-adjusted, category-by-category cost breakdown</li>
-            <li>· Saved history of every check you run, including Lot Checks</li>
             <li>· Works for any home — new or used, any age</li>
-            <li>· Cancel anytime, no questions asked</li>
+            <li>· A free account also saves your history and lets you post
+              for contractor bids</li>
           </ul>
           <Link
-            to="/checkout?type=consumer-trial"
+            to="/renovate/check"
             className="mt-6 block rounded-full bg-clay px-6 py-3 text-center text-sm font-semibold text-paper transition-colors hover:bg-clay-dark"
           >
-            Start your free trial
+            Check your renovation
           </Link>
         </div>
         <p className="mt-6 text-center text-sm text-ink-soft">
-          Already a member?{" "}
+          Want saved history and the bidding marketplace?{" "}
+          <Link to="/account/signup" className="font-semibold text-forest hover:underline">
+            Create a free account
+          </Link>{" "}
+          or{" "}
           <Link to="/account/login" className="font-semibold text-forest hover:underline">
-            Log in
+            log in
           </Link>
+          .
         </p>
       </section>
     </div>

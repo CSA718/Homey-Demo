@@ -176,8 +176,12 @@ export default function Report() {
       ) : (
         <div className="mt-8 rounded-2xl border border-dashed border-line bg-paper-raised p-6 text-center print:hidden">
           <p className="text-ink-soft">
+            <Link to="/account/signup" className="font-semibold text-forest hover:underline">
+              Create a free account
+            </Link>{" "}
+            or{" "}
             <Link to="/account/login" className="font-semibold text-forest hover:underline">
-              Log in
+              log in
             </Link>{" "}
             to connect with a member builder in {report.state}.
           </p>

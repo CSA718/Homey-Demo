@@ -115,12 +115,12 @@ export default function Layout() {
                 </li>
                 <li>
                   <Link to="/renovate" className="hover:text-forest">
-                    Renovation Check
+                    Renovation Check — free
                   </Link>
                 </li>
                 <li>
-                  <Link to="/renovate" className="hover:text-forest">
-                    Homey Membership — $25/mo, 7-day trial
+                  <Link to="/account/signup" className="hover:text-forest">
+                    Create a free account
                   </Link>
                 </li>
                 <li>

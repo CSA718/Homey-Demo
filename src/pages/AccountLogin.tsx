@@ -24,7 +24,7 @@ export default function AccountLogin() {
   return (
     <div className="mx-auto max-w-md px-6 py-24">
       <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-        Homey Membership Login
+        Account Login
       </span>
       <h1 className="mt-6 font-serif text-3xl text-ink">Welcome back.</h1>
       <p className="mt-3 text-ink-soft">
@@ -73,9 +73,9 @@ export default function AccountLogin() {
         </button>
       </form>
       <p className="mt-6 text-center text-sm text-ink-soft">
-        Not a member yet?{" "}
-        <Link to="/renovate" className="font-semibold text-forest hover:underline">
-          Start your free trial
+        No account yet?{" "}
+        <Link to="/account/signup" className="font-semibold text-forest hover:underline">
+          Create a free account
         </Link>
       </p>
     </div>

@@ -120,8 +120,9 @@ export default function Home() {
           Three ways to use Homey.
         </h2>
         <p className="mt-3 max-w-2xl text-ink-soft">
-          Lot Check is completely free, no account needed. Renovation Check
-          is part of the $25/mo Homey Membership, with a 7-day free trial.
+          Lot Check and Renovation Check are both completely free, no
+          account needed. A free account saves your history and unlocks
+          connecting with member builders.
         </p>
         <div className="mt-10 grid gap-8 lg:grid-cols-3">
           <div className="flex flex-col rounded-2xl border border-line bg-paper-raised p-8">
@@ -158,8 +159,8 @@ export default function Home() {
               the likelihood it fits, adjusted for your state.
             </p>
             <div className="mt-6 flex items-baseline gap-2">
-              <span className="font-serif text-3xl text-ink">$25</span>
-              <span className="text-sm text-ink-soft">/mo · 7-day free trial</span>
+              <span className="font-serif text-3xl text-ink">Free</span>
+              <span className="text-sm text-ink-soft">no account needed</span>
             </div>
             <Link
               to="/renovate"

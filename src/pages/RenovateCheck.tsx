@@ -49,7 +49,7 @@ export default function RenovateCheck() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!account || !state || !budget || selectedKeys.length === 0) return;
+    if (!state || !budget || selectedKeys.length === 0) return;
 
     setStage("computing");
     window.setTimeout(() => {
@@ -60,7 +60,9 @@ export default function RenovateCheck() {
       const result = computeRenovationEstimate(Number(budget), state, homeAge, scope);
       setEstimate(result);
       setSubmittedScope(scope);
-      saveCheck(account.id, { state, homeAge, budget: Number(budget), scope, estimate: result }).catch(() => {});
+      if (account) {
+        saveCheck(account.id, { state, homeAge, budget: Number(budget), scope, estimate: result }).catch(() => {});
+      }
       setStage("result");
     }, 900);
   }
@@ -87,18 +89,33 @@ export default function RenovateCheck() {
     );
   }
 
-  if (stage === "result" && estimate && account) {
+  if (stage === "result" && estimate) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <RenovationEstimateCard estimate={estimate} />
-        <PostRenovationListing
-          account={account}
-          state={state}
-          homeAge={homeAge}
-          budget={Number(budget)}
-          scope={submittedScope}
-          estimate={estimate}
-        />
+        {account ? (
+          <PostRenovationListing
+            account={account}
+            state={state}
+            homeAge={homeAge}
+            budget={Number(budget)}
+            scope={submittedScope}
+            estimate={estimate}
+          />
+        ) : (
+          <div className="mt-8 rounded-2xl border border-dashed border-line bg-paper-raised p-6 text-center">
+            <p className="text-ink-soft">
+              <Link to="/account/signup" className="font-semibold text-forest hover:underline">
+                Create a free account
+              </Link>{" "}
+              or{" "}
+              <Link to="/account/login" className="font-semibold text-forest hover:underline">
+                log in
+              </Link>{" "}
+              to save this check and post it for contractor bids in {state}.
+            </p>
+          </div>
+        )}
         <div className="mt-8 flex flex-wrap gap-3">
           <button
             onClick={handleReset}
@@ -106,12 +123,14 @@ export default function RenovateCheck() {
           >
             Run another check
           </button>
-          <Link
-            to="/account"
-            className="rounded-full border border-line px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
-          >
-            View saved checks
-          </Link>
+          {account && (
+            <Link
+              to="/account"
+              className="rounded-full border border-line px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
+            >
+              View saved checks
+            </Link>
+          )}
         </div>
       </div>
     );

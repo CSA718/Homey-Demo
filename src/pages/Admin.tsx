@@ -131,7 +131,7 @@ export default function Admin() {
                     <th className="px-5 py-3 font-semibold">Email</th>
                     <th className="px-5 py-3 font-semibold">Role</th>
                     <th className="px-5 py-3 font-semibold">State</th>
-                    <th className="px-5 py-3 font-semibold">Status</th>
+                    <th className="px-5 py-3 font-semibold">Pricing</th>
                     <th className="px-5 py-3 font-semibold">Joined</th>
                   </tr>
                 </thead>
@@ -150,7 +150,7 @@ export default function Admin() {
                       <td className="px-5 py-4 text-ink-soft capitalize">{p.role}</td>
                       <td className="px-5 py-4 text-ink-soft">{p.state ?? "—"}</td>
                       <td className="px-5 py-4 text-ink-soft">
-                        {p.canceledAt ? "Canceled" : p.trialEndsAt ? "Member" : "—"}
+                        {p.role === "builder" ? "$499/mo" : "Free"}
                       </td>
                       <td className="px-5 py-4 text-ink-soft">{formatDate(p.createdAt)}</td>
                     </tr>
