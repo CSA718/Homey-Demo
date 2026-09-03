@@ -77,7 +77,7 @@ export default function Admin() {
       </span>
       <h1 className="mt-3 font-serif text-3xl text-ink">Admin overview</h1>
       <p className="mt-2 text-ink-soft">
-        Every real account and every piece of activity across ClearLot, on any
+        Every real account and every piece of activity across ClearParcel, on any
         device — this view bypasses the per-account visibility rules
         everyone else sees.
       </p>

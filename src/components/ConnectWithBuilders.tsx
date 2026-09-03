@@ -68,7 +68,7 @@ export default function ConnectWithBuilders({
       </p>
       {!hasInState && (
         <p className="mt-2 text-sm text-caution">
-          No ClearLot member builders in {report.state} yet — here are members
+          No ClearParcel member builders in {report.state} yet — here are members
           in other states who take out-of-area referrals.
         </p>
       )}
@@ -118,7 +118,7 @@ export default function ConnectWithBuilders({
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-semibold text-ink">{builder.businessName}</p>
                   <span className="shrink-0 rounded-full bg-forest/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-forest">
-                    ClearLot Member
+                    ClearParcel Member
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-ink-soft">

@@ -21,7 +21,7 @@ export default function Builders() {
           Stop bidding on people who were never going to build.
         </h1>
         <p className="mt-6 max-w-xl text-lg text-ink-soft">
-          Route your unqualified inquiries to ClearLot instead of burning
+          Route your unqualified inquiries to ClearParcel instead of burning
           estimator hours on them. And buyers who run a Lot Check on their
           own can find and connect with you directly — with their report and
           budget already in hand.
@@ -56,7 +56,7 @@ export default function Builders() {
             </h2>
             <p className="mt-4 text-ink-soft">
               You pay nothing whether we send you ten referrals in a month or
-              none. That's what lets ClearLot stay credibly on the buyer's
+              none. That's what lets ClearParcel stay credibly on the buyer's
               side — we're not incentivized to pad your pipeline with soft
               leads, because our revenue doesn't depend on lead volume.
             </p>
@@ -83,7 +83,7 @@ export default function Builders() {
           </h2>
           <p className="mt-3 max-w-2xl text-ink-soft">
             You don't have to wait for your own inquiries to go cold before
-            ClearLot helps. Every buyer who runs a Lot Check sees member
+            ClearParcel helps. Every buyer who runs a Lot Check sees member
             builders in their state right on their results page, with a
             "Connect" button that lands directly in your dashboard.
           </p>
@@ -132,7 +132,7 @@ export default function Builders() {
           <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1fr]">
             <div className="rounded-xl border border-paper/15 bg-paper/5 p-6">
               <label htmlFor="inquiries" className="text-sm text-paper/80">
-                Unqualified inquiries routed to ClearLot per month
+                Unqualified inquiries routed to ClearParcel per month
               </label>
               <input
                 id="inquiries"
@@ -201,7 +201,7 @@ export default function Builders() {
             to="/builder-signup"
             className="mt-6 block rounded-full bg-clay px-6 py-3 text-center text-sm font-semibold text-paper transition-colors hover:bg-clay-dark"
           >
-            Join ClearLot
+            Join ClearParcel
           </Link>
         </div>
         <p className="mt-6 text-center text-sm text-ink-soft">

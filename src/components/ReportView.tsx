@@ -85,8 +85,8 @@ export default function ReportView({
 
         <p className="border-t border-line pt-4 text-xs text-ink-soft">
           {hasLiveData
-            ? "Flood zone confirmed via a live FEMA query. Remaining categories use ClearLot's modeled public-data engine."
-            : "This report uses ClearLot's modeled public-data engine for all categories."}
+            ? "Flood zone confirmed via a live FEMA query. Remaining categories use ClearParcel's modeled public-data engine."
+            : "This report uses ClearParcel's modeled public-data engine for all categories."}
         </p>
       </div>
 

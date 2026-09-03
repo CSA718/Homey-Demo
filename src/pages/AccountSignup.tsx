@@ -37,7 +37,7 @@ export default function AccountSignup() {
   return (
     <div className="mx-auto max-w-md px-6 py-24">
       <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-        Free ClearLot account
+        Free ClearParcel account
       </span>
       <h1 className="mt-6 font-serif text-3xl text-ink">Create your account.</h1>
       <p className="mt-3 text-ink-soft">

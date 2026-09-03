@@ -44,7 +44,7 @@ export async function getMatchedBuilders(state: string, minResults = 4): Promise
     id: a.id,
     businessName: a.businessName,
     state: a.state,
-    tagline: "ClearLot member builder",
+    tagline: "ClearParcel member builder",
     isRealAccount: true,
   }));
 

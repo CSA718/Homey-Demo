@@ -55,12 +55,12 @@ export default function DirectQuoteForm({
         Send a direct quote
       </p>
       <h2 className="mt-1 font-serif text-xl text-ink">
-        Quote a lead from outside ClearLot
+        Quote a lead from outside ClearParcel
       </h2>
       <p className="mt-2 text-sm text-ink-soft">
         For a lead that came in some other way — a phone call, a referral,
         someone at an open house. Enter their info and a number; it lands
-        in their ClearLot account as soon as they have one with this email.
+        in their ClearParcel account as soon as they have one with this email.
       </p>
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">

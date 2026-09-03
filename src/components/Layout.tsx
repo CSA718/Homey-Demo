@@ -7,7 +7,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? "text-forest" : "text-ink-soft hover:text-forest"
   }`;
 
-function ClearLotMark() {
+function ClearParcelMark() {
   return (
     <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
       <rect width="48" height="48" rx="10" fill="#1f4a37" />
@@ -28,8 +28,8 @@ export default function Layout() {
       <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
-            <ClearLotMark />
-            <span className="font-serif text-xl text-ink">ClearLot</span>
+            <ClearParcelMark />
+            <span className="font-serif text-xl text-ink">ClearParcel</span>
           </Link>
           <nav className="hidden items-center gap-8 md:flex">
             <NavLink to="/lot-check" className={navLinkClass}>
@@ -98,8 +98,8 @@ export default function Layout() {
           <div className="grid gap-10 md:grid-cols-3">
             <div>
               <div className="flex items-center gap-2">
-                <ClearLotMark />
-                <span className="font-serif text-lg text-ink">ClearLot</span>
+                <ClearParcelMark />
+                <span className="font-serif text-lg text-ink">ClearParcel</span>
               </div>
               <p className="mt-3 max-w-xs text-sm text-ink-soft">
                 Home building made easy. Now serving all 50 states.
@@ -147,7 +147,7 @@ export default function Layout() {
             </div>
           </div>
           <div className="mt-10 flex flex-col gap-2 border-t border-line pt-6 text-xs text-ink-soft/80 sm:flex-row sm:items-center sm:justify-between">
-            <p>© 2026 ClearLot. Everything is free during launch — no payment is ever charged yet.</p>
+            <p>© 2026 ClearParcel. Everything is free during launch — no payment is ever charged yet.</p>
             <p>
               Lot Check is a preliminary screening that identifies risks
               requiring professional verification — never a buildability

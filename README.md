@@ -1,6 +1,6 @@
-# ClearLot — Home Building Made Easy
+# ClearParcel — Home Building Made Easy
 
-ClearLot: a home-building and home-renovation service for buyers,
+ClearParcel: a home-building and home-renovation service for buyers,
 homeowners, and builders anywhere in the U.S., running on a real backend
 with real accounts. Everything is free during launch — no payment
 processing is wired up anywhere in the app, for anyone.
@@ -25,14 +25,14 @@ processing is wired up anywhere in the app, for anyone.
   renovation cost index and a contingency for the home's age.
 
 A first-time visitor can run either tool immediately — no signup, no
-account, nothing. A free ClearLot account (`/account/signup`) additionally
+account, nothing. A free ClearParcel account (`/account/signup`) additionally
 saves every check to your history and unlocks connecting with member
 builders and posting jobs for contractor bids. The account dashboard
 (`/account`) shows saved history for both tools together.
 
 On the builder side, membership is also free during launch — builders
-route their own unqualified inquiries to ClearLot *and* are discoverable
-by buyers and homeowners who found ClearLot first, plus a dashboard for
+route their own unqualified inquiries to ClearParcel *and* are discoverable
+by buyers and homeowners who found ClearParcel first, plus a dashboard for
 managing the leads that come back either way — including their own
 line-item cost estimator that checks a builder's real numbers against
 what the buyer can spend and finds the break-even margin, and a Direct
@@ -152,7 +152,7 @@ renovation listings) from the same dashboard and bid on either.
   compressed to match that real, narrower spread. A contingency percentage
   (5–22%) is added based on the home's age bracket, since older homes more
   often turn up hidden costs once work starts. (`src/lib/renovation.ts`)
-- **The ClearLot account is one real, free account covering both consumer
+- **The ClearParcel account is one real, free account covering both consumer
   tools**, separate from builder accounts since those are a different kind
   of member. Signup/login runs on Supabase Auth; saved history for both Lot
   Checks and Renovation Checks lives in Postgres under one account, visible
@@ -167,7 +167,7 @@ renovation listings) from the same dashboard and bid on either.
   once and is visible to every matched contractor in that state, who each
   submit their own bid; a Lot Check report can likewise collect bids from
   every builder the buyer connected with — connecting itself still needs a
-  free ClearLot account, since that's what a bid is tied to and how you
+  free ClearParcel account, since that's what a bid is tied to and how you
   find your way back to it. Anyone can still run and view either tool with
   no account at all; they just won't see or receive bids.
   (`src/lib/bids.ts`, `src/lib/renovationListings.ts`,
@@ -177,13 +177,13 @@ renovation listings) from the same dashboard and bid on either.
   (a phone call, a referral, someone at an open house). The builder enters
   the consumer's name, email, and a dollar amount from their dashboard's
   Direct Quotes tab; it's matched to that consumer by email at read time,
-  so it shows up on their `/account` page as soon as they have a ClearLot
+  so it shows up on their `/account` page as soon as they have a ClearParcel
   account with that email — even if they didn't yet when the builder sent
   it. (`src/lib/directQuotes.ts`, `src/components/DirectQuoteForm.tsx`)
 
 ## Pages
 
-- `/` — landing page, problem framing, three ways to use ClearLot
+- `/` — landing page, problem framing, three ways to use ClearParcel
 - `/lot-check` — address/city/state intake form, any US state — free, no
   account needed, goes straight to `/report` either way. Logged-in members
   additionally get the report saved to their account history.
@@ -211,7 +211,7 @@ renovation listings) from the same dashboard and bid on either.
   needed, same pattern as Lot Check. Logged-in members additionally get
   the check saved to their account history and can post it for
   contractor bids.
-- `/account/login` — login for an existing ClearLot account
+- `/account/login` — login for an existing ClearParcel account
 - `/account` — protected: saved history for both Lot Checks and
   Renovation Checks, posted listings, and quotes received from builders
 - `/account/lot-checks/:checkId` — protected: redirects into the matching
@@ -251,21 +251,24 @@ Vite + React + TypeScript + Tailwind CSS v4 + React Router + Supabase
 
 ## Custom domain
 
-The production build is deployed to GitHub Pages via
-`.github/workflows/pages.yml`. To serve it from a custom domain instead of
-the default `*.github.io` subdomain:
+The site is configured to serve from **clearparcel.io** — `public/CNAME`,
+`vite.config.ts`'s `base` (root, not a subpath), and `public/404.html`'s
+SPA-redirect logic are already set up for it. Two steps remain, both
+outside this repo:
 
-1. Buy the domain from any registrar.
-2. Add DNS records at the registrar: four **A** records at the apex
-   (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`,
-   `185.199.111.153`) and, for `www`, a **CNAME** to the `*.github.io`
-   address.
-3. In the repo's **Settings → Pages → Custom domain**, enter the domain
-   and save; check **Enforce HTTPS** once GitHub issues the certificate.
-4. A `public/CNAME` file containing the domain must exist in the repo (Vite
-   copies everything under `public/` into the build unchanged) — and
-   `vite.config.ts`'s `base` needs to be `/` instead of a subpath, since a
-   custom domain serves from the root.
+1. Register `clearparcel.io`, then add DNS records at the registrar —
+   for the apex domain itself (not a `www` subdomain):
+   - **A** records: `185.199.108.153`, `185.199.109.153`,
+     `185.199.110.153`, `185.199.111.153`
+   - **AAAA** records (optional, IPv6): `2606:50c0:8000::153`,
+     `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`
+2. In the repo's **Settings → Pages → Custom domain**, enter
+   `clearparcel.io` and save; once GitHub verifies DNS and issues the
+   certificate (minutes to ~24h), check **Enforce HTTPS**.
+
+Until both are done, `https://csa718.github.io/Homey-Demo/` will not load
+correctly — the build now emits root-relative asset paths (`/assets/...`)
+to match the custom domain, which don't resolve under the old subpath.
 
 ## Running locally
 

@@ -60,7 +60,7 @@ export default function Account() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-            ClearLot Account · Free
+            ClearParcel Account · Free
           </p>
           <h1 className="mt-1 font-serif text-2xl text-ink sm:text-3xl">
             Welcome back, {account.name.split(" ")[0]}

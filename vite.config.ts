@@ -4,6 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/Homey-Demo/',
+  // Served from the custom domain root (clearparcel.io), not a GitHub
+  // Pages project subpath.
+  base: '/',
   plugins: [react(), tailwindcss()],
 })

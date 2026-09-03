@@ -32,11 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
       getSession().then((a) => active && setAccount(a));
     });
-    window.addEventListener("clearlot-auth-change", refresh);
+    window.addEventListener("clearparcel-auth-change", refresh);
     return () => {
       active = false;
       sub.subscription.unsubscribe();
-      window.removeEventListener("clearlot-auth-change", refresh);
+      window.removeEventListener("clearparcel-auth-change", refresh);
     };
   }, []);
 

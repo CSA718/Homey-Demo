@@ -122,11 +122,11 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-            ClearLot Member
+            ClearParcel Member
           </span>
           <h1 className="mt-3 font-serif text-3xl text-ink">{account.businessName}</h1>
           <p className="mt-1 text-ink-soft">
-            Referred leads routed to you through ClearLot.
+            Referred leads routed to you through ClearParcel.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -278,7 +278,7 @@ export default function Dashboard() {
           {leads.length === 0 && (
             <p className="mt-8 text-center text-ink-soft">
               No leads yet — they'll appear here as buyers come back from
-              ClearLot with a verified lot.
+              ClearParcel with a verified lot.
             </p>
           )}
         </>

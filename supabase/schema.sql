@@ -1,4 +1,4 @@
--- ClearLot — real backend schema (Supabase / Postgres).
+-- ClearParcel — real backend schema (Supabase / Postgres).
 --
 -- Run this once in the Supabase SQL editor (Project → SQL Editor → New
 -- query → paste → Run). Safe to re-run: every statement is guarded so a
@@ -114,7 +114,7 @@ create table if not exists public.bids (
 -- direct_quotes — a builder sending a specific dollar quote straight to a
 -- consumer by email, with no existing lead/listing required (a lead that
 -- came from outside the app — a phone call, a referral). Matched by email
--- at read time, so it still reaches them once they have a ClearLot account
+-- at read time, so it still reaches them once they have a ClearParcel account
 -- with that email, even if they didn't have one yet when it was sent.
 -- ---------------------------------------------------------------------
 create table if not exists public.direct_quotes (

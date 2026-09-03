@@ -1,4 +1,4 @@
-// The free ClearLot account — covers both Lot Check and Renovation Check.
+// The free ClearParcel account — covers both Lot Check and Renovation Check.
 // Real accounts backed by Supabase Auth (see src/lib/profile.ts), shared
 // across every device. No billing, no trial, no cost — an account just
 // gets you saved history and the builder marketplace (connecting, posting
@@ -37,7 +37,7 @@ export async function signUp(
 ): Promise<{ account: ConsumerAccount } | { pendingConfirmation: true } | { error: string }> {
   const result = await signUpWithProfile({ email, password, role: "consumer", name });
   if ("error" in result || "pendingConfirmation" in result) return result;
-  window.dispatchEvent(new Event("clearlot-consumer-auth-change"));
+  window.dispatchEvent(new Event("clearparcel-consumer-auth-change"));
   return { account: toConsumerAccount(result.profile) };
 }
 
@@ -47,13 +47,13 @@ export async function logIn(
 ): Promise<{ account: ConsumerAccount } | { error: string }> {
   const result = await logInWithProfile(email, password, "consumer");
   if ("error" in result) return result;
-  window.dispatchEvent(new Event("clearlot-consumer-auth-change"));
+  window.dispatchEvent(new Event("clearparcel-consumer-auth-change"));
   return { account: toConsumerAccount(result.profile) };
 }
 
 export async function logOut(): Promise<void> {
   await logOutProfile();
-  window.dispatchEvent(new Event("clearlot-consumer-auth-change"));
+  window.dispatchEvent(new Event("clearparcel-consumer-auth-change"));
 }
 
 export async function getSession(): Promise<ConsumerAccount | null> {
