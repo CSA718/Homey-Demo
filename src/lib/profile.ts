@@ -113,7 +113,7 @@ export async function logInWithProfile(
   }
   if (profile.role !== expectedRole) {
     await supabase.auth.signOut();
-    const kind = expectedRole === "builder" ? "builder" : "Homey membership";
+    const kind = expectedRole === "builder" ? "builder" : "ClearLot";
     return { error: `That email is registered as a ${profile.role} account, not a ${kind} account.` };
   }
   return { profile };

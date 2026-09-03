@@ -73,8 +73,8 @@ export default function BuilderLogin() {
       </form>
       <p className="mt-6 text-center text-sm text-ink-soft">
         Not a member yet?{" "}
-        <Link to="/builders" className="font-semibold text-forest hover:underline">
-          See membership plans
+        <Link to="/builder-signup" className="font-semibold text-forest hover:underline">
+          Create a free builder account
         </Link>
       </p>
     </div>

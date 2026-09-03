@@ -77,7 +77,7 @@ export default function Admin() {
       </span>
       <h1 className="mt-3 font-serif text-3xl text-ink">Admin overview</h1>
       <p className="mt-2 text-ink-soft">
-        Every real account and every piece of activity across Homey, on any
+        Every real account and every piece of activity across ClearLot, on any
         device — this view bypasses the per-account visibility rules
         everyone else sees.
       </p>
@@ -140,7 +140,6 @@ export default function Admin() {
                     <th className="px-5 py-3 font-semibold">Email</th>
                     <th className="px-5 py-3 font-semibold">Role</th>
                     <th className="px-5 py-3 font-semibold">State</th>
-                    <th className="px-5 py-3 font-semibold">Pricing</th>
                     <th className="px-5 py-3 font-semibold">Joined</th>
                   </tr>
                 </thead>
@@ -158,9 +157,6 @@ export default function Admin() {
                       <td className="px-5 py-4 text-ink-soft">{p.email}</td>
                       <td className="px-5 py-4 text-ink-soft capitalize">{p.role}</td>
                       <td className="px-5 py-4 text-ink-soft">{p.state ?? "—"}</td>
-                      <td className="px-5 py-4 text-ink-soft">
-                        {p.role === "builder" ? "$499/mo" : "Free"}
-                      </td>
                       <td className="px-5 py-4 text-ink-soft">{formatDate(p.createdAt)}</td>
                     </tr>
                   ))}

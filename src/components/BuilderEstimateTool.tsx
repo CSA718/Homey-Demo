@@ -73,7 +73,7 @@ export default function BuilderEstimateTool({
         Your cost breakdown for this build
       </h2>
       <p className="mt-2 text-sm text-ink-soft">
-        Fill in your own line-item numbers. Homey checks the total against
+        Fill in your own line-item numbers. ClearLot checks the total against
         what the buyer said they can spend and shows the markup you can
         realistically charge.
       </p>

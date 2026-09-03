@@ -1,8 +1,9 @@
-# Homey — Home Building Made Easy
+# ClearLot — Home Building Made Easy
 
-Homey: a home-building and home-renovation service for buyers,
+ClearLot: a home-building and home-renovation service for buyers,
 homeowners, and builders anywhere in the U.S., running on a real backend
-with real accounts — the only thing not real is payment processing.
+with real accounts. Everything is free during launch — no payment
+processing is wired up anywhere in the app, for anyone.
 
 - **Lot Check is free, unlimited, no account required.** Screens a parcel
   against wetlands, watershed/wastewater sensitivity, flood zone, soil
@@ -24,17 +25,19 @@ with real accounts — the only thing not real is payment processing.
   renovation cost index and a contingency for the home's age.
 
 A first-time visitor can run either tool immediately — no signup, no
-account, nothing. A free Homey account (`/account/signup`) additionally
+account, nothing. A free ClearLot account (`/account/signup`) additionally
 saves every check to your history and unlocks connecting with member
 builders and posting jobs for contractor bids. The account dashboard
 (`/account`) shows saved history for both tools together.
 
-On the builder side, a flat **$499/mo membership** lets builders route
-their own unqualified inquiries to Homey *and* be discoverable by buyers
-and homeowners who found Homey first, plus a dashboard for managing the
-leads that come back either way — including their own line-item cost
-estimator that checks a builder's real numbers against what the buyer can
-spend and finds the break-even margin.
+On the builder side, membership is also free during launch — builders
+route their own unqualified inquiries to ClearLot *and* are discoverable
+by buyers and homeowners who found ClearLot first, plus a dashboard for
+managing the leads that come back either way — including their own
+line-item cost estimator that checks a builder's real numbers against
+what the buyer can spend and finds the break-even margin, and a Direct
+Quotes tool for sending a specific dollar number to a lead that came in
+outside the app entirely.
 
 Both sides support **contractor bidding**. A homeowner can post their
 Renovation Check as an open listing for member contractors serving their
@@ -60,14 +63,13 @@ renovation listings) from the same dashboard and bid on either.
   category is actually administered by nationally (USACE/state wetlands
   programs, state environmental agencies, state Natural Heritage programs,
   etc). (`src/lib/lotCheck.ts`)
-- **Payments are the one deliberately mocked piece, and only exist for
-  builders.** `/checkout` is now builder-only — the flat $499/mo builder
-  membership. It has a Stripe-style card form, but no real payment
-  processor is wired in — no card is validated or charged. Consumers never
-  see a payment screen at all: Lot Check and Renovation Check both go
-  straight from their form to the result, logged in or not, and creating a
-  free Homey account (`/account/signup`) is just a name/email/password
-  form. (`src/pages/Checkout.tsx`, `src/pages/AccountSignup.tsx`)
+- **Nothing costs anything, anywhere — not because payment is mocked, but
+  because it isn't wired up at all.** There is no checkout page, no card
+  form, no Stripe integration. Both consumer tools are free with no
+  account; the free consumer account (`/account/signup`) and the free
+  builder account (`/builder-signup`) are both a plain name/email/password
+  form. Pricing can be layered in later once there's real usage to price
+  against. (`src/pages/AccountSignup.tsx`, `src/pages/BuilderSignup.tsx`)
 - **Everything else runs on a real backend: Supabase (Postgres + Auth).**
   Builder accounts, consumer accounts, Lot Check history, Renovation Check
   history, renovation listings, bids, and connection leads all live in
@@ -81,17 +83,17 @@ renovation listings) from the same dashboard and bid on either.
   account (consumer or builder) can be flagged `is_admin` in the database
   (one SQL statement, see `supabase/schema.sql`), which unlocks `/admin`:
   every account, every Lot Check, every Renovation Check, every listing,
-  every bid, across every user — not just the ones in this browser.
-  (`src/pages/Admin.tsx`, `src/lib/profile.ts`)
+  every bid, every direct quote, across every user — not just the ones in
+  this browser. (`src/pages/Admin.tsx`, `src/lib/profile.ts`)
 - **The builder marketplace is real accounts plus seed data, and
   connections are real.** The "Connect with a Builder" step on the report
   page matches against builders who actually signed up anywhere (via
-  `/checkout?type=membership`, which collects a service-area state) merged
-  with ~10 seeded sample builders spread across common states, so the list
-  is never empty. Clicking Connect on a real account writes an actual lead
-  into that builder's dashboard, in the real `connection_leads` table —
-  sign up as a builder in a state, then run a Lot Check in that state from
-  any device, and the lead shows up in that builder's dashboard wherever
+  `/builder-signup`, which collects a service-area state) merged with ~10
+  seeded sample builders spread across common states, so the list is never
+  empty. Clicking Connect on a real account writes an actual lead into
+  that builder's dashboard, in the real `connection_leads` table — sign up
+  as a builder in a state, then run a Lot Check in that state from any
+  device, and the lead shows up in that builder's dashboard wherever
   they're logged in. Connecting with a seed/sample builder just shows a
   confirmation, since there's no real account behind it to deliver to.
   (`src/lib/builderDirectory.ts`, `src/components/ConnectWithBuilders.tsx`)
@@ -125,7 +127,7 @@ renovation listings) from the same dashboard and bid on either.
   factoring in size, tier, and how many flags/cautions the screening found.
   (`src/lib/costEstimate.ts`, `src/components/BuilderEstimateTool.tsx`)
 - **The floor plan is a real, computed layout — not a stock image.** There's
-  no image/video generation model wired into this demo, so rather than
+  no image/video generation model wired into this app, so rather than
   faking a photorealistic render, the report computes an actual schematic
   floor plan from the buyer's entered bedroom count, bathroom count, square
   footage, stories, and garage size: rooms are sized and tiled to those
@@ -150,15 +152,13 @@ renovation listings) from the same dashboard and bid on either.
   compressed to match that real, narrower spread. A contingency percentage
   (5–22%) is added based on the home's age bracket, since older homes more
   often turn up hidden costs once work starts. (`src/lib/renovation.ts`)
-- **The Homey account is one real, free account covering both consumer
+- **The ClearLot account is one real, free account covering both consumer
   tools**, separate from builder accounts since those are a different kind
-  of member — and unlike a builder account, it costs nothing and never
-  gates the tools themselves. Signup/login runs on Supabase Auth; saved
-  history for both Lot Checks and Renovation Checks lives in Postgres
-  under one account, visible from any device that account logs into.
-  (`src/lib/consumerAuth.ts`, `src/pages/AccountSignup.tsx`,
-  `src/lib/lotCheckHistory.ts`, `src/lib/renoChecks.ts`,
-  `src/context/ConsumerAuthContext.tsx`)
+  of member. Signup/login runs on Supabase Auth; saved history for both Lot
+  Checks and Renovation Checks lives in Postgres under one account, visible
+  from any device that account logs into. (`src/lib/consumerAuth.ts`,
+  `src/pages/AccountSignup.tsx`, `src/lib/lotCheckHistory.ts`,
+  `src/lib/renoChecks.ts`, `src/context/ConsumerAuthContext.tsx`)
 - **Bids and renovation listings are real, shared, cross-account data**,
   enforced by row-level security rather than by trusting the browser — a
   bid a builder submits is visible to the buyer or homeowner who posted
@@ -167,9 +167,9 @@ renovation listings) from the same dashboard and bid on either.
   once and is visible to every matched contractor in that state, who each
   submit their own bid; a Lot Check report can likewise collect bids from
   every builder the buyer connected with — connecting itself still needs a
-  free Homey account, since that's what a bid is tied to and how you find
-  your way back to it. Anyone can still run and view either tool with no
-  account at all; they just won't see or receive bids.
+  free ClearLot account, since that's what a bid is tied to and how you
+  find your way back to it. Anyone can still run and view either tool with
+  no account at all; they just won't see or receive bids.
   (`src/lib/bids.ts`, `src/lib/renovationListings.ts`,
   `src/components/BidForm.tsx`, `src/components/BidList.tsx`)
 - **Builders can also send a direct quote to any consumer, with no
@@ -177,27 +177,29 @@ renovation listings) from the same dashboard and bid on either.
   (a phone call, a referral, someone at an open house). The builder enters
   the consumer's name, email, and a dollar amount from their dashboard's
   Direct Quotes tab; it's matched to that consumer by email at read time,
-  so it shows up on their `/account` page as soon as they have a Homey
+  so it shows up on their `/account` page as soon as they have a ClearLot
   account with that email — even if they didn't yet when the builder sent
   it. (`src/lib/directQuotes.ts`, `src/components/DirectQuoteForm.tsx`)
 
 ## Pages
 
-- `/` — landing page, problem framing, three ways to use Homey
+- `/` — landing page, problem framing, three ways to use ClearLot
 - `/lot-check` — address/city/state intake form, any US state — free, no
   account needed, goes straight to `/report` either way. Logged-in members
   additionally get the report saved to their account history.
 - `/account/signup` — free consumer account: name, email, password, no
   card, no trial
-- `/checkout` — mocked payment: the builder's $499/mo membership only
 - `/report` — the generated screening report, with a live geocode + FEMA
   flood-zone lookup, a staged "scanning" animation, and (for logged-in
   members) auto-saved into their account history
-- `/builders` — flat $499/mo membership pricing, an interactive ROI
-  calculator
-- `/builder-login` — login for existing builder demo accounts
-- `/dashboard` — protected: a builder's Lot Check leads and open
-  Renovation Check jobs in tabs, pipeline stats, and status tracking
+- `/builders` — builder marketing page: free membership, an interactive
+  ROI calculator
+- `/builder-login` — login for an existing builder account
+- `/builder-signup` — free builder account: business name, service-area
+  state, email, password, no card
+- `/dashboard` — protected: a builder's Lot Check leads, open Renovation
+  Check jobs, and sent Direct Quotes, in tabs, with pipeline stats and
+  status tracking
 - `/dashboard/leads/:leadId` — protected: a single lead's contact info,
   full Lot Check report, and the builder's bid + everyone else's bids on it
 - `/dashboard/renovation-jobs/:listingId` — protected: an open renovation
@@ -209,9 +211,9 @@ renovation listings) from the same dashboard and bid on either.
   needed, same pattern as Lot Check. Logged-in members additionally get
   the check saved to their account history and can post it for
   contractor bids.
-- `/account/login` — login for an existing Homey account
+- `/account/login` — login for an existing ClearLot account
 - `/account` — protected: saved history for both Lot Checks and
-  Renovation Checks, and posted listings
+  Renovation Checks, posted listings, and quotes received from builders
 - `/account/lot-checks/:checkId` — protected: redirects into the matching
   `/report` URL
 - `/account/renovation-checks/:checkId` — protected: a single saved
@@ -229,9 +231,10 @@ Vite + React + TypeScript + Tailwind CSS v4 + React Router + Supabase
 ## Backend setup (Supabase)
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. Open the SQL Editor and run `supabase/schema.sql` — it creates every
-   table, row-level security policy, and the trigger that turns a signup
-   into a profile row.
+2. Open the SQL Editor and run the entire `supabase/schema.sql` file —
+   it creates every table, row-level security policy, and the trigger
+   that turns a signup into a profile row. Safe to re-run any time the
+   file changes (every statement is idempotent).
 3. In **Authentication → Providers → Email**, turn off "Confirm email" so
    signup grants an active session immediately (matches the rest of the
    app's instant-access UX). Leave it on if you'd rather have real email
@@ -245,6 +248,24 @@ Vite + React + TypeScript + Tailwind CSS v4 + React Router + Supabase
    ```sql
    update public.profiles set is_admin = true where email = 'you@example.com';
    ```
+
+## Custom domain
+
+The production build is deployed to GitHub Pages via
+`.github/workflows/pages.yml`. To serve it from a custom domain instead of
+the default `*.github.io` subdomain:
+
+1. Buy the domain from any registrar.
+2. Add DNS records at the registrar: four **A** records at the apex
+   (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`,
+   `185.199.111.153`) and, for `www`, a **CNAME** to the `*.github.io`
+   address.
+3. In the repo's **Settings → Pages → Custom domain**, enter the domain
+   and save; check **Enforce HTTPS** once GitHub issues the certificate.
+4. A `public/CNAME` file containing the domain must exist in the repo (Vite
+   copies everything under `public/` into the build unchanged) — and
+   `vite.config.ts`'s `base` needs to be `/` instead of a subpath, since a
+   custom domain serves from the root.
 
 ## Running locally
 

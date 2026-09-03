@@ -45,7 +45,7 @@ export async function signUp(
     state,
   });
   if ("error" in result || "pendingConfirmation" in result) return result;
-  window.dispatchEvent(new Event("homey-auth-change"));
+  window.dispatchEvent(new Event("clearlot-auth-change"));
   return { account: toBuilderAccount(result.profile) };
 }
 
@@ -55,13 +55,13 @@ export async function logIn(
 ): Promise<{ account: BuilderAccount } | { error: string }> {
   const result = await logInWithProfile(email, password, "builder");
   if ("error" in result) return result;
-  window.dispatchEvent(new Event("homey-auth-change"));
+  window.dispatchEvent(new Event("clearlot-auth-change"));
   return { account: toBuilderAccount(result.profile) };
 }
 
 export async function logOut(): Promise<void> {
   await logOutProfile();
-  window.dispatchEvent(new Event("homey-auth-change"));
+  window.dispatchEvent(new Event("clearlot-auth-change"));
 }
 
 export async function getSession(): Promise<BuilderAccount | null> {

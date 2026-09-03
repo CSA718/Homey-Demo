@@ -32,11 +32,11 @@ export function ConsumerAuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
       getSession().then((a) => active && setAccount(a));
     });
-    window.addEventListener("homey-consumer-auth-change", refresh);
+    window.addEventListener("clearlot-consumer-auth-change", refresh);
     return () => {
       active = false;
       sub.subscription.unsubscribe();
-      window.removeEventListener("homey-consumer-auth-change", refresh);
+      window.removeEventListener("clearlot-consumer-auth-change", refresh);
     };
   }, []);
 

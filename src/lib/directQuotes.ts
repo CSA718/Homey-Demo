@@ -2,7 +2,7 @@
 // a consumer by email, with no existing Lot Check lead or Renovation
 // listing required (a lead that came in outside the app: a phone call, a
 // referral, a conversation at an open house). Matched to the consumer by
-// email at read time, so it reaches them as soon as they have a Homey
+// email at read time, so it reaches them as soon as they have a ClearLot
 // account with that email — even if they didn't have one yet when the
 // builder sent it.
 

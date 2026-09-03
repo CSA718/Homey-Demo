@@ -117,7 +117,7 @@ export default function Home() {
       {/* Three audiences */}
       <section className="mx-auto max-w-6xl px-6 py-20">
         <h2 className="font-serif text-2xl text-ink sm:text-3xl">
-          Three ways to use Homey.
+          Three ways to use ClearLot.
         </h2>
         <p className="mt-3 max-w-2xl text-ink-soft">
           Lot Check and Renovation Check are both completely free, no
@@ -176,13 +176,13 @@ export default function Home() {
             </p>
             <h3 className="mt-2 font-serif text-2xl text-ink">Membership</h3>
             <p className="mt-3 flex-1 text-ink-soft">
-              Route your unqualified inquiries to Homey instead of burning
+              Route your unqualified inquiries to ClearLot instead of burning
               estimator hours on them. Whoever comes back has a verified lot
               and a real budget.
             </p>
             <div className="mt-6 flex items-baseline gap-2">
-              <span className="font-serif text-3xl text-ink">$499</span>
-              <span className="text-sm text-ink-soft">/mo · flat rate, every builder</span>
+              <span className="font-serif text-3xl text-ink">Free</span>
+              <span className="text-sm text-ink-soft">during launch, every builder</span>
             </div>
             <Link
               to="/builders"

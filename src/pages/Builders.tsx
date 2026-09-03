@@ -3,14 +3,12 @@ import { Link } from "react-router-dom";
 
 const ESTIMATOR_RATE = 65; // $/hr, blended cost of estimator time
 const HOURS_PER_BID = 8; // midpoint of the 6–12 hour range
-const MEMBERSHIP_PRICE = 499;
 
 export default function Builders() {
   const [inquiries, setInquiries] = useState(6);
 
   const hoursSaved = inquiries * HOURS_PER_BID;
   const dollarsSaved = hoursSaved * ESTIMATOR_RATE;
-  const net = dollarsSaved - MEMBERSHIP_PRICE;
 
   return (
     <div>
@@ -23,7 +21,7 @@ export default function Builders() {
           Stop bidding on people who were never going to build.
         </h1>
         <p className="mt-6 max-w-xl text-lg text-ink-soft">
-          Route your unqualified inquiries to Homey instead of burning
+          Route your unqualified inquiries to ClearLot instead of burning
           estimator hours on them. And buyers who run a Lot Check on their
           own can find and connect with you directly — with their report and
           budget already in hand.
@@ -54,11 +52,11 @@ export default function Builders() {
         <div className="grid gap-10 lg:grid-cols-2">
           <div>
             <h2 className="font-serif text-2xl text-ink sm:text-3xl">
-              Flat membership, not per-lead fees.
+              Free during launch — no per-lead fees, ever.
             </h2>
             <p className="mt-4 text-ink-soft">
-              You pay the same whether we send you ten referrals in a month
-              or none. That's what lets Homey stay credibly on the buyer's
+              You pay nothing whether we send you ten referrals in a month or
+              none. That's what lets ClearLot stay credibly on the buyer's
               side — we're not incentivized to pad your pipeline with soft
               leads, because our revenue doesn't depend on lead volume.
             </p>
@@ -85,7 +83,7 @@ export default function Builders() {
           </h2>
           <p className="mt-3 max-w-2xl text-ink-soft">
             You don't have to wait for your own inquiries to go cold before
-            Homey helps. Every buyer who runs a Lot Check sees member
+            ClearLot helps. Every buyer who runs a Lot Check sees member
             builders in their state right on their results page, with a
             "Connect" button that lands directly in your dashboard.
           </p>
@@ -134,7 +132,7 @@ export default function Builders() {
           <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1fr]">
             <div className="rounded-xl border border-paper/15 bg-paper/5 p-6">
               <label htmlFor="inquiries" className="text-sm text-paper/80">
-                Unqualified inquiries routed to Homey per month
+                Unqualified inquiries routed to ClearLot per month
               </label>
               <input
                 id="inquiries"
@@ -173,13 +171,10 @@ export default function Builders() {
               </div>
               <div className="col-span-2 rounded-xl border border-clay/40 bg-clay/10 p-5">
                 <p className="text-xs uppercase tracking-wide text-clay-light">
-                  Net after membership (${MEMBERSHIP_PRICE}/mo flat)
+                  Membership cost
                 </p>
-                <p className="mt-1 font-serif text-3xl text-paper">
-                  {net >= 0 ? "+" : "−"}$
-                  {Math.abs(net).toLocaleString("en-US")}
-                </p>
-                <p className="text-xs text-paper/50">per month, before a single closed deal</p>
+                <p className="mt-1 font-serif text-3xl text-paper">$0</p>
+                <p className="text-xs text-paper/50">free during launch — that's ${dollarsSaved.toLocaleString("en-US")}/mo pure upside</p>
               </div>
             </div>
           </div>
@@ -190,23 +185,23 @@ export default function Builders() {
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="font-serif text-2xl text-ink sm:text-3xl">Membership</h2>
         <div className="mx-auto mt-8 max-w-md rounded-2xl border-2 border-clay bg-paper-raised p-8">
-          <p className="text-sm font-semibold text-clay">Flat rate, every builder</p>
+          <p className="text-sm font-semibold text-clay">Free during launch</p>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="font-serif text-4xl text-ink">${MEMBERSHIP_PRICE}</span>
-            <span className="text-sm text-ink-soft">/mo</span>
+            <span className="font-serif text-4xl text-ink">$0</span>
+            <span className="text-sm text-ink-soft">/mo, every builder</span>
           </div>
           <ul className="mt-6 space-y-3 text-sm text-ink-soft">
             <li>· Unlimited unqualified-lead routing</li>
             <li>· Listed to every buyer who runs a Lot Check in your state</li>
             <li>· Verified lot + budget on every connection</li>
-            <li>· Same price whether we send ten referrals or none</li>
+            <li>· No cost while we're getting real usage on the platform</li>
             <li>· No tiers, no negotiation</li>
           </ul>
           <Link
-            to="/checkout?type=membership"
+            to="/builder-signup"
             className="mt-6 block rounded-full bg-clay px-6 py-3 text-center text-sm font-semibold text-paper transition-colors hover:bg-clay-dark"
           >
-            Join Homey
+            Join ClearLot
           </Link>
         </div>
         <p className="mt-6 text-center text-sm text-ink-soft">

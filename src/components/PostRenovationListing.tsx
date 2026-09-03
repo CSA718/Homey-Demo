@@ -91,7 +91,7 @@ export default function PostRenovationListing({
       </p>
       {!hasInState && (
         <p className="mt-2 text-sm text-caution">
-          No Homey member contractors in {state} yet — here are members in
+          No ClearLot member contractors in {state} yet — here are members in
           other states who take out-of-area referrals.
         </p>
       )}
