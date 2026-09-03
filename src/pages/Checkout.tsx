@@ -28,14 +28,6 @@ export default function Checkout() {
   const { refresh: refreshConsumer } = useConsumerAuth();
 
   const type = params.get("type") === "membership" ? "membership" : "consumer-trial";
-
-  // Present when checkout was reached from the Lot Check form, so the
-  // report can be generated right after signup instead of landing on the
-  // renovation tool.
-  const address = params.get("address") ?? "";
-  const city = params.get("city") ?? "";
-  const state = params.get("state") ?? "";
-  const fromLotCheck = Boolean(address.trim() && city.trim() && state);
   const prefillEmail = params.get("email") ?? "";
 
   const [businessName, setBusinessName] = useState("");
@@ -53,11 +45,7 @@ export default function Checkout() {
   const amount = type === "membership" ? MEMBERSHIP_PRICE : CONSUMER_PRICE;
   const title = type === "membership" ? "Homey Builder Membership" : "Homey Membership";
   const subtitle =
-    type === "membership"
-      ? "Flat rate, billed monthly"
-      : fromLotCheck
-        ? `${TRIAL_DAYS}-day free trial, then billed monthly — includes this Lot Check`
-        : `${TRIAL_DAYS}-day free trial, then billed monthly`;
+    type === "membership" ? "Flat rate, billed monthly" : `${TRIAL_DAYS}-day free trial, then billed monthly`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -105,12 +93,6 @@ export default function Checkout() {
       return;
     }
     refreshConsumer();
-    if (fromLotCheck) {
-      const reportParams = new URLSearchParams(params);
-      reportParams.delete("type");
-      navigate(`/report?${reportParams.toString()}`);
-      return;
-    }
     navigate("/renovate/check");
   }
 

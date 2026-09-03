@@ -110,7 +110,7 @@ export default function Layout() {
               <ul className="mt-3 space-y-2 text-sm text-ink-soft">
                 <li>
                   <Link to="/lot-check" className="hover:text-forest">
-                    Lot Check
+                    Lot Check — free
                   </Link>
                 </li>
                 <li>

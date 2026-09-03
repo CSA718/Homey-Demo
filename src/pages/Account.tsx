@@ -122,10 +122,10 @@ export default function Account() {
           </span>
           <p className="mt-2 text-sm text-ink-soft">
             {subState === "trialing" &&
-              `Your card won't be charged until your trial ends on ${new Date(account.trialEndsAt).toLocaleDateString()}. Covers unlimited Lot Checks and Renovation Checks.`}
-            {subState === "active" && "Billed $25/mo flat — unlimited Lot Checks and Renovation Checks. Cancel anytime."}
+              `Your card won't be charged until your trial ends on ${new Date(account.trialEndsAt).toLocaleDateString()}. Covers unlimited Renovation Checks (Lot Check is always free).`}
+            {subState === "active" && "Billed $25/mo flat — unlimited Renovation Checks. Cancel anytime. (Lot Check is always free.)"}
             {subState === "canceled" &&
-              "You can keep running checks until the end of your current period. Resume anytime."}
+              "You can keep running Renovation Checks until the end of your current period — Lot Check stays free either way. Resume anytime."}
           </p>
         </div>
         {subState === "canceled" ? (

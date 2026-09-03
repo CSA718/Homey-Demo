@@ -40,14 +40,15 @@ export default function Renovate() {
         </p>
       </section>
 
-      {/* One membership covers both tools */}
+      {/* Related tool */}
       <section className="border-y border-line bg-sand/60">
         <div className="mx-auto max-w-6xl px-6 py-12">
           <p className="max-w-3xl text-ink-soft">
-            One $25/mo Homey Membership covers both tools — Lot Check
-            screens raw land before you build; Renovation Check is for a
-            home you already own or are buying as-is, brand new or decades
-            old, and any scope of work on it. Sign up once, use either.
+            Buying raw land instead? <Link to="/lot-check" className="font-semibold text-forest hover:underline">Lot Check</Link> screens
+            a parcel's buildability — completely free, no account needed.
+            Renovation Check is for a home you already own or are buying
+            as-is, brand new or decades old, and any scope of work on it —
+            that's the $25/mo Homey Membership below.
           </p>
         </div>
       </section>
@@ -112,9 +113,9 @@ export default function Renovate() {
             <span className="text-sm text-ink-soft">/mo after trial</span>
           </div>
           <ul className="mt-6 space-y-3 text-sm text-ink-soft">
-            <li>· Unlimited Lot Checks and renovation checks</li>
+            <li>· Unlimited Renovation Checks</li>
             <li>· State-adjusted, category-by-category cost breakdown</li>
-            <li>· Saved history of every check you run</li>
+            <li>· Saved history of every check you run, including Lot Checks</li>
             <li>· Works for any home — new or used, any age</li>
             <li>· Cancel anytime, no questions asked</li>
           </ul>

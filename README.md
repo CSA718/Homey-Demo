@@ -3,33 +3,33 @@
 Homey: a home-building and home-renovation service for buyers,
 homeowners, and builders anywhere in the U.S., running on a real backend
 with real accounts — the only thing not real is payment processing.
-Consumers sign up once for
-a single **Homey Membership** ($25/mo, 7-day free trial) that covers
-unlimited use of both consumer tools:
 
-- **Lot Check** screens a parcel against wetlands, watershed/wastewater
-  sensitivity, flood zone, soil drainage, zoning/setbacks, priority
-  habitat, and wellhead protection, and computes a **Budget Fit**: the
-  buyer's stated budget compared against the lot's estimated land value, a
-  realistic construction-cost estimate for their chosen size and build
-  tier, and this lot's own site-specific added costs — expressed as a
-  likelihood the budget covers the full cost to own the finished home.
-  Buyers can also add home specifications (bedrooms, bathrooms, stories,
-  garage, style, notes) and see an illustrative floor plan computed from
-  those actual inputs, right on the report.
-- **Renovation Check** is for a home a member already owns — or is buying
-  as-is — new or old. It sets a budget and checks off a scope of work
-  across 14 categories (kitchen, bathroom, room addition, basement, roof,
-  deck, windows/doors, flooring, siding, HVAC, electrical, fireplace,
-  painting, whole-home renovation), and gets back a likelihood the budget
-  covers it, scaled by the state's renovation cost index and a
-  contingency for the home's age.
+- **Lot Check is free, unlimited, no account required.** Screens a parcel
+  against wetlands, watershed/wastewater sensitivity, flood zone, soil
+  drainage, zoning/setbacks, priority habitat, and wellhead protection,
+  and computes a **Budget Fit**: the buyer's stated budget compared
+  against the lot's estimated land value, a realistic construction-cost
+  estimate for their chosen size and build tier, and this lot's own
+  site-specific added costs — expressed as a likelihood the budget covers
+  the full cost to own the finished home. Buyers can also add home
+  specifications (bedrooms, bathrooms, stories, garage, style, notes) and
+  see an illustrative floor plan computed from those actual inputs, right
+  on the report.
+- **Renovation Check** is a **Homey Membership** ($25/mo, 7-day free
+  trial) — for a home a member already owns, or is buying as-is, new or
+  old. It sets a budget and checks off a scope of work across 14
+  categories (kitchen, bathroom, room addition, basement, roof, deck,
+  windows/doors, flooring, siding, HVAC, electrical, fireplace, painting,
+  whole-home renovation), and gets back a likelihood the budget covers it,
+  scaled by the state's renovation cost index and a contingency for the
+  home's age.
 
-A first-time visitor who submits either tool's form is walked through the
-trial signup (mocked checkout) and lands straight on their result; a
-returning member skips checkout entirely on every later Lot Check or
-Renovation Check. Their account dashboard (`/account`) shows saved history
-for both tools together, plus subscription status.
+A first-time visitor can run a Lot Check immediately — no signup, no
+account, nothing. Being logged in (i.e. a Homey Member) additionally
+saves every Lot Check to your account history and unlocks connecting
+with member builders and posting jobs for contractor bids, alongside
+Renovation Check itself. The account dashboard (`/account`) shows saved
+history for both tools together, plus subscription status.
 
 On the builder side, a flat **$499/mo membership** lets builders route
 their own unqualified inquiries to Homey *and* be discoverable by buyers
@@ -67,9 +67,9 @@ renovation listings) from the same dashboard and bid on either.
   card is validated or charged. Everything else about the account it
   creates (the login, the trial/membership state, the data it can see) is
   real. It handles two signup types: the builder's flat $499/mo
-  membership, and the consumer's $25/mo trial (which, when reached from
-  the Lot Check form, redirects straight to that report after signup
-  instead of a generic landing page). (`src/pages/Checkout.tsx`)
+  membership, and the consumer's $25/mo Renovation Check trial. Lot Check
+  itself never touches checkout — the form goes straight to the report,
+  logged in or not. (`src/pages/Checkout.tsx`, `src/pages/LotCheck.tsx`)
 - **Everything else runs on a real backend: Supabase (Postgres + Auth).**
   Builder accounts, consumer accounts, Lot Check history, Renovation Check
   history, renovation listings, bids, and connection leads all live in
@@ -154,13 +154,14 @@ renovation listings) from the same dashboard and bid on either.
   often turn up hidden costs once work starts. (`src/lib/renovation.ts`)
 - **The consumer Homey Membership is one real account covering both
   tools**, separate from builder accounts since those are a different kind
-  of member. Signup/login runs on Supabase Auth; a 7-day trial → $25/mo
-  subscription state (trialing/active/canceled, computed from a stored
-  trial-end date — still no real billing) and saved history for both Lot
-  Checks and Renovation Checks live in Postgres under one account, visible
-  from any device that account logs into.
-  (`src/lib/consumerAuth.ts`, `src/lib/lotCheckHistory.ts`,
-  `src/lib/renoChecks.ts`, `src/context/ConsumerAuthContext.tsx`)
+  of member — but only Renovation Check actually requires it. Signup/login
+  runs on Supabase Auth; a 7-day trial → $25/mo subscription state
+  (trialing/active/canceled, computed from a stored trial-end date — still
+  no real billing) and saved history for both Lot Checks and Renovation
+  Checks live in Postgres under one account, visible from any device that
+  account logs into. (`src/lib/consumerAuth.ts`,
+  `src/lib/lotCheckHistory.ts`, `src/lib/renoChecks.ts`,
+  `src/context/ConsumerAuthContext.tsx`)
 - **Bids and renovation listings are real, shared, cross-account data**,
   enforced by row-level security rather than by trusting the browser — a
   bid a builder submits is visible to the buyer or homeowner who posted
@@ -168,21 +169,21 @@ renovation listings) from the same dashboard and bid on either.
   wherever each of them is logged in. A Renovation Check listing is posted
   once and is visible to every matched contractor in that state, who each
   submit their own bid; a Lot Check report can likewise collect bids from
-  every builder the buyer connected with. Since Lot Check now requires a
-  Homey Membership account, bids are tied to that account — the report
-  page also just works if you bookmark it and come back later, still
-  logged in. (`src/lib/bids.ts`, `src/lib/renovationListings.ts`,
+  every builder the buyer connected with — connecting itself still needs a
+  Homey Membership login, since that's what a bid is tied to and how you
+  find your way back to it. Anyone can still view and run a Lot Check
+  itself with no account at all; they just won't see or receive bids on
+  it. (`src/lib/bids.ts`, `src/lib/renovationListings.ts`,
   `src/components/BidForm.tsx`, `src/components/BidList.tsx`)
 
 ## Pages
 
 - `/` — landing page, problem framing, three ways to use Homey
-- `/lot-check` — address/city/state intake form, any US state. Submitting
-  as a member goes straight to `/report`; submitting as a first-time
-  visitor routes through the trial signup first.
+- `/lot-check` — address/city/state intake form, any US state — free, no
+  account needed, goes straight to `/report` either way. Logged-in members
+  additionally get the report saved to their account history.
 - `/checkout` — mocked payment: the builder's $499/mo membership, or the
-  consumer's $25/mo trial (which forwards Lot Check details through so
-  signup lands on the report, not a generic page)
+  consumer's $25/mo Renovation Check trial
 - `/report` — the generated screening report, with a live geocode + FEMA
   flood-zone lookup, a staged "scanning" animation, and (for logged-in
   members) auto-saved into their account history

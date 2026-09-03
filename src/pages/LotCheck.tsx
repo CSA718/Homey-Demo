@@ -40,17 +40,13 @@ export default function LotCheck() {
       style,
       notes: notes.slice(0, 300),
     };
-    if (account) {
-      navigate(`/report?${new URLSearchParams(fields).toString()}`);
-      return;
-    }
-    navigate(`/checkout?${new URLSearchParams({ type: "consumer-trial", ...fields }).toString()}`);
+    navigate(`/report?${new URLSearchParams(fields).toString()}`);
   }
 
   return (
     <div className="mx-auto max-w-xl px-6 py-16 sm:py-24">
       <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-ink-soft">
-        Lot Check · Included in your Homey Membership
+        Lot Check · Free, no account needed
       </span>
       <h1 className="mt-6 font-serif text-3xl text-ink sm:text-4xl">
         Find out if a lot is buildable — and if your budget covers it.
@@ -62,7 +58,7 @@ export default function LotCheck() {
         zoning, priority habitat, and wellhead protection data — and compare
         your budget against a realistic estimated build cost for this lot.
         {!account &&
-          " Unlimited Lot Checks are included in the $25/mo Homey Membership — start with a 7-day free trial."}
+          " No signup, no card, no catch — the report is yours instantly. Want to save your history or connect with a builder? You can log in or start a Homey Membership from the report page."}
       </p>
 
       <form
@@ -313,11 +309,10 @@ export default function LotCheck() {
           type="submit"
           className="w-full rounded-full bg-forest px-6 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark disabled:opacity-50"
         >
-          {account ? "Run this Lot Check" : "Start free trial & run this Lot Check"}
+          Run this Lot Check — free
         </button>
         <p className="text-center text-xs text-ink-soft">
-          Your account is created for real — payment isn't wired up yet, so
-          no real card is charged.
+          No account, no payment, no obligation.
         </p>
       </form>
     </div>

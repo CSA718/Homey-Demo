@@ -33,7 +33,7 @@ export default function Home() {
                 to="/lot-check"
                 className="rounded-full bg-forest px-7 py-3.5 text-center text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
               >
-                Get a Lot Check — $25/mo
+                Get a free Lot Check
               </Link>
               <Link
                 to="/builders"
@@ -43,7 +43,7 @@ export default function Home() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-ink-soft">
-              7-day free trial. Every report reviewed and signed by a
+              No account needed. Every report reviewed and signed by a
               credentialed human.
             </p>
           </div>
@@ -120,8 +120,8 @@ export default function Home() {
           Three ways to use Homey.
         </h2>
         <p className="mt-3 max-w-2xl text-ink-soft">
-          One $25/mo Homey Membership, 7-day free trial, covers unlimited
-          Lot Checks and Renovation Checks.
+          Lot Check is completely free, no account needed. Renovation Check
+          is part of the $25/mo Homey Membership, with a 7-day free trial.
         </p>
         <div className="mt-10 grid gap-8 lg:grid-cols-3">
           <div className="flex flex-col rounded-2xl border border-line bg-paper-raised p-8">
@@ -136,8 +136,8 @@ export default function Home() {
               habitat, and wellhead protection.
             </p>
             <div className="mt-6 flex items-baseline gap-2">
-              <span className="font-serif text-3xl text-ink">$25</span>
-              <span className="text-sm text-ink-soft">/mo · 7-day free trial</span>
+              <span className="font-serif text-3xl text-ink">Free</span>
+              <span className="text-sm text-ink-soft">no account needed</span>
             </div>
             <Link
               to="/lot-check"
@@ -242,7 +242,7 @@ export default function Home() {
             to="/lot-check"
             className="rounded-full bg-forest px-8 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest-dark"
           >
-            Get a Lot Check — $25/mo
+            Get a free Lot Check
           </Link>
           <Link
             to="/builders"
