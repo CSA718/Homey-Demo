@@ -10,7 +10,9 @@ import {
 } from "../lib/leads";
 import { getListingsForState, type RenovationListing } from "../lib/renovationListings";
 import { getBidsForTargets } from "../lib/bids";
+import { getQuotesSentByBuilder, type DirectQuote } from "../lib/directQuotes";
 import VerdictBadge from "../components/VerdictBadge";
+import DirectQuoteForm from "../components/DirectQuoteForm";
 
 const HOURS_PER_BID = 8;
 const ESTIMATOR_RATE = 65;
@@ -40,7 +42,9 @@ export default function Dashboard() {
   const [myLotCheckBidIds, setMyLotCheckBidIds] = useState<Set<string>>(new Set());
   const [myRenovationBidIds, setMyRenovationBidIds] = useState<Set<string>>(new Set());
   const [renovationBidCounts, setRenovationBidCounts] = useState<Record<string, number>>({});
-  const [tab, setTab] = useState<"leads" | "renovation">("leads");
+  const [quotes, setQuotes] = useState<DirectQuote[]>([]);
+  const [quotesVersion, setQuotesVersion] = useState(0);
+  const [tab, setTab] = useState<"leads" | "renovation" | "quotes">("leads");
 
   useEffect(() => {
     if (!account) return;
@@ -51,6 +55,15 @@ export default function Dashboard() {
       active = false;
     };
   }, [account]);
+
+  useEffect(() => {
+    if (!account) return;
+    let active = true;
+    getQuotesSentByBuilder(account.id).then((q) => active && setQuotes(q));
+    return () => {
+      active = false;
+    };
+  }, [account, quotesVersion]);
 
   useEffect(() => {
     if (!account || leads.length === 0) {
@@ -176,6 +189,14 @@ export default function Dashboard() {
           }`}
         >
           Renovation Jobs{listings.length > 0 ? ` (${listings.length})` : ""}
+        </button>
+        <button
+          onClick={() => setTab("quotes")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            tab === "quotes" ? "bg-forest text-paper" : "bg-sand text-ink-soft hover:bg-sand/70"
+          }`}
+        >
+          Direct Quotes{quotes.length > 0 ? ` (${quotes.length})` : ""}
         </button>
       </div>
 
@@ -318,6 +339,55 @@ export default function Dashboard() {
             </p>
           )}
         </>
+      )}
+
+      {tab === "quotes" && (
+        <div className="mt-6 space-y-8">
+          <DirectQuoteForm
+            builderAccountId={account.id}
+            builderName={account.businessName}
+            onSent={() => setQuotesVersion((n) => n + 1)}
+          />
+
+          <div>
+            <h2 className="font-serif text-xl text-ink">Quotes you've sent</h2>
+            <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-paper-raised">
+              <table className="w-full min-w-[600px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                    <th className="px-5 py-3 font-semibold">Consumer</th>
+                    <th className="px-5 py-3 font-semibold">Amount</th>
+                    <th className="px-5 py-3 font-semibold">Note</th>
+                    <th className="px-5 py-3 font-semibold">Sent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quotes.map((q) => (
+                    <tr key={q.id} className="border-b border-line last:border-0">
+                      <td className="px-5 py-4">
+                        <p className="font-semibold text-ink">{q.consumerName}</p>
+                        <p className="text-xs text-ink-soft">{q.consumerEmail}</p>
+                      </td>
+                      <td className="px-5 py-4 text-ink-soft">{formatMoney(q.amount)}</td>
+                      <td className="px-5 py-4 text-ink-soft">{q.message || "—"}</td>
+                      <td className="px-5 py-4 text-ink-soft">
+                        {new Date(q.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {quotes.length === 0 && (
+                <p className="p-8 text-center text-ink-soft">
+                  No quotes sent yet — use the form above to quote a lead directly.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

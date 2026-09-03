@@ -6,9 +6,10 @@ import { listAllListings } from "../lib/renovationListings";
 import type { RenovationListing } from "../lib/renovationListings";
 import { listAllBids, type Bid } from "../lib/bids";
 import { listAllConnectionLeads, type Lead } from "../lib/leads";
+import { listAllDirectQuotes, type DirectQuote } from "../lib/directQuotes";
 import VerdictBadge from "../components/VerdictBadge";
 
-type Tab = "accounts" | "lot-checks" | "renovation-checks" | "listings" | "bids" | "connections";
+type Tab = "accounts" | "lot-checks" | "renovation-checks" | "listings" | "bids" | "connections" | "quotes";
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "accounts", label: "Accounts" },
@@ -17,6 +18,7 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "listings", label: "Renovation Listings" },
   { value: "bids", label: "Bids" },
   { value: "connections", label: "Connection Leads" },
+  { value: "quotes", label: "Direct Quotes" },
 ];
 
 function formatMoney(n: number) {
@@ -36,6 +38,7 @@ export default function Admin() {
   const [listings, setListings] = useState<RenovationListing[]>([]);
   const [bids, setBids] = useState<Bid[]>([]);
   const [connections, setConnections] = useState<Lead[]>([]);
+  const [quotes, setQuotes] = useState<DirectQuote[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -46,7 +49,8 @@ export default function Admin() {
       listAllListings(),
       listAllBids(),
       listAllConnectionLeads(),
-    ]).then(([p, lc, rc, l, b, c]) => {
+      listAllDirectQuotes(),
+    ]).then(([p, lc, rc, l, b, c, q]) => {
       if (!active) return;
       setProfiles(p);
       setLotChecks(lc);
@@ -54,6 +58,7 @@ export default function Admin() {
       setListings(l);
       setBids(b);
       setConnections(c);
+      setQuotes(q);
       setLoading(false);
     });
     return () => {
@@ -77,7 +82,7 @@ export default function Admin() {
         everyone else sees.
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-7">
         <div className="rounded-xl border border-line bg-paper-raised p-4">
           <p className="text-xs uppercase tracking-wide text-ink-soft">Consumers</p>
           <p className="mt-1 font-serif text-2xl text-ink">{consumerCount}</p>
@@ -101,6 +106,10 @@ export default function Admin() {
         <div className="rounded-xl border border-line bg-paper-raised p-4">
           <p className="text-xs uppercase tracking-wide text-ink-soft">Bids</p>
           <p className="mt-1 font-serif text-2xl text-ink">{bids.length}</p>
+        </div>
+        <div className="rounded-xl border border-line bg-paper-raised p-4">
+          <p className="text-xs uppercase tracking-wide text-ink-soft">Direct Quotes</p>
+          <p className="mt-1 font-serif text-2xl text-ink">{quotes.length}</p>
         </div>
       </div>
 
@@ -320,6 +329,37 @@ export default function Admin() {
                 </tbody>
               </table>
               {connections.length === 0 && <p className="p-8 text-center text-ink-soft">No connections yet.</p>}
+            </div>
+          )}
+
+          {tab === "quotes" && (
+            <div className="overflow-x-auto rounded-xl border border-line bg-paper-raised">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                    <th className="px-5 py-3 font-semibold">Builder</th>
+                    <th className="px-5 py-3 font-semibold">Consumer</th>
+                    <th className="px-5 py-3 font-semibold">Amount</th>
+                    <th className="px-5 py-3 font-semibold">Note</th>
+                    <th className="px-5 py-3 font-semibold">Sent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quotes.map((q) => (
+                    <tr key={q.id} className="border-b border-line last:border-0">
+                      <td className="px-5 py-4 text-ink">{q.builderName}</td>
+                      <td className="px-5 py-4 text-ink-soft">
+                        {q.consumerName}
+                        <p className="text-xs">{q.consumerEmail}</p>
+                      </td>
+                      <td className="px-5 py-4 text-ink-soft">{formatMoney(q.amount)}</td>
+                      <td className="px-5 py-4 text-ink-soft">{q.message || "—"}</td>
+                      <td className="px-5 py-4 text-ink-soft">{formatDate(q.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {quotes.length === 0 && <p className="p-8 text-center text-ink-soft">No direct quotes sent yet.</p>}
             </div>
           )}
         </div>

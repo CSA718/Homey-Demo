@@ -172,6 +172,14 @@ renovation listings) from the same dashboard and bid on either.
   account at all; they just won't see or receive bids.
   (`src/lib/bids.ts`, `src/lib/renovationListings.ts`,
   `src/components/BidForm.tsx`, `src/components/BidList.tsx`)
+- **Builders can also send a direct quote to any consumer, with no
+  listing required** — for a lead that came in outside the app entirely
+  (a phone call, a referral, someone at an open house). The builder enters
+  the consumer's name, email, and a dollar amount from their dashboard's
+  Direct Quotes tab; it's matched to that consumer by email at read time,
+  so it shows up on their `/account` page as soon as they have a Homey
+  account with that email — even if they didn't yet when the builder sent
+  it. (`src/lib/directQuotes.ts`, `src/components/DirectQuoteForm.tsx`)
 
 ## Pages
 

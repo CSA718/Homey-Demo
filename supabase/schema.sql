@@ -111,6 +111,24 @@ create table if not exists public.bids (
 );
 
 -- ---------------------------------------------------------------------
+-- direct_quotes — a builder sending a specific dollar quote straight to a
+-- consumer by email, with no existing lead/listing required (a lead that
+-- came from outside the app — a phone call, a referral). Matched by email
+-- at read time, so it still reaches them once they have a Homey account
+-- with that email, even if they didn't have one yet when it was sent.
+-- ---------------------------------------------------------------------
+create table if not exists public.direct_quotes (
+  id uuid primary key default gen_random_uuid(),
+  builder_account_id uuid not null references public.profiles(id) on delete cascade,
+  builder_name text not null,
+  consumer_email text not null,
+  consumer_name text not null,
+  amount numeric not null,
+  message text not null default '',
+  created_at timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------
 -- Auto-create a profiles row the instant someone signs up, straight off
 -- auth.users — this runs server-side (security definer) inside the same
 -- transaction as the signup, so it works whether or not "Confirm email"
@@ -152,6 +170,7 @@ alter table public.renovation_checks enable row level security;
 alter table public.renovation_listings enable row level security;
 alter table public.connection_leads enable row level security;
 alter table public.bids enable row level security;
+alter table public.direct_quotes enable row level security;
 
 create or replace function public.is_admin()
 returns boolean
@@ -294,6 +313,20 @@ create policy bids_update on public.bids
       )
     )
   );
+
+-- direct_quotes: the builder who sent it, or the consumer it was sent to
+-- (matched by their own profile email), or admin.
+drop policy if exists direct_quotes_select on public.direct_quotes;
+create policy direct_quotes_select on public.direct_quotes
+  for select using (
+    builder_account_id = auth.uid()
+    or public.is_admin()
+    or consumer_email = (select p.email from public.profiles p where p.id = auth.uid())
+  );
+
+drop policy if exists direct_quotes_insert on public.direct_quotes;
+create policy direct_quotes_insert on public.direct_quotes
+  for insert with check (builder_account_id = auth.uid());
 
 -- ---------------------------------------------------------------------
 -- One-time: promote your own account to admin. Sign up on the live site

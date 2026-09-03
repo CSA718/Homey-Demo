@@ -5,6 +5,7 @@ import { getLotChecksForAccount, type SavedLotCheck } from "../lib/lotCheckHisto
 import { getChecksForAccount, type SavedRenovationCheck } from "../lib/renoChecks";
 import { getListingsForConsumer, type RenovationListing } from "../lib/renovationListings";
 import { getBidsForTargets } from "../lib/bids";
+import { getQuotesForConsumer, type DirectQuote } from "../lib/directQuotes";
 import VerdictBadge from "../components/VerdictBadge";
 
 function formatMoney(n: number) {
@@ -18,6 +19,7 @@ export default function Account() {
   const [renoChecks, setRenoChecks] = useState<SavedRenovationCheck[]>([]);
   const [listings, setListings] = useState<RenovationListing[]>([]);
   const [bidCounts, setBidCounts] = useState<Record<string, number>>({});
+  const [quotes, setQuotes] = useState<DirectQuote[]>([]);
 
   useEffect(() => {
     if (!account) return;
@@ -25,6 +27,7 @@ export default function Account() {
     getLotChecksForAccount(account.id).then((v) => active && setLotChecks(v));
     getChecksForAccount(account.id).then((v) => active && setRenoChecks(v));
     getListingsForConsumer(account.id).then((v) => active && setListings(v));
+    getQuotesForConsumer(account.email).then((v) => active && setQuotes(v));
     return () => {
       active = false;
     };
@@ -83,6 +86,32 @@ export default function Account() {
           </button>
         </div>
       </div>
+
+      {quotes.length > 0 && (
+        <div className="mt-8">
+          <h2 className="font-serif text-xl text-ink">Quotes from builders</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Sent to you directly by a member builder — not tied to a
+            specific Lot Check or Renovation Check.
+          </p>
+          <div className="mt-4 space-y-3">
+            {quotes.map((q) => (
+              <div key={q.id} className="rounded-xl border border-line bg-paper-raised p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <p className="font-semibold text-ink">{q.builderName}</p>
+                  <div className="text-right">
+                    <p className="font-serif text-lg text-ink">{formatMoney(q.amount)}</p>
+                    <p className="text-xs text-ink-soft">
+                      {new Date(q.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                {q.message && <p className="mt-2 text-sm text-ink-soft">"{q.message}"</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 flex items-center justify-between">
         <h2 className="font-serif text-xl text-ink">Your Lot Checks</h2>
