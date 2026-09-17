@@ -8,7 +8,7 @@
       // client-side route back to the root with the path encoded in the
       // query string, restored by the inline script in index.html.
       // https://github.com/rafgraph/spa-github-pages
-      var pathSegmentsToKeep = 0; // served from the domain root, no subpath to keep
+      var pathSegmentsToKeep = 1; // keep "/Homey-Demo" (temporary, until clearparcel.io is live)
       var l = window.location;
       l.replace(
         l.protocol +
