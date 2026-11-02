@@ -1,0 +1,116 @@
+name: investbot daily run
+
+# Runs the trading bot once per weekday. PAPER unless the repo variable
+# INVESTBOT_MODE is set to "live" (and the bot's own 30-day paper gate passes).
+#
+# GitHub cron is UTC-only and can start late, so it fires twice (an hour apart) and
+# `--once-per-day` makes the second firing a no-op. In summer (EDT) the first fires
+# at 10:45 New York time; in winter (EST) at 9:45, 15 minutes after the open.
+#
+# Bot state (paper history, daily-loss halt, last rebalance, trade log, backtest
+# reports) is kept on the `investbot-state` branch so it survives between runs.
+
+on:
+  schedule:
+    - cron: "45 14 * * 1-5"
+    - cron: "45 15 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "run = normal daily run; backtest = force a fresh backtest; resume = clear a daily-loss halt"
+        type: choice
+        options: [run, backtest, resume]
+        default: run
+
+permissions:
+  contents: write   # to push the investbot-state branch
+
+concurrency:
+  group: investbot
+  cancel-in-progress: false
+
+jobs:
+  trade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: investbot
+    env:
+      INVESTBOT_DATA_DIR: ${{ github.workspace }}/_state
+      ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
+      ALPACA_PAPER_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
+      ALPACA_LIVE_API_KEY: ${{ secrets.ALPACA_LIVE_API_KEY }}
+      ALPACA_LIVE_SECRET_KEY: ${{ secrets.ALPACA_LIVE_SECRET_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+      MODE_FLAG: ${{ vars.INVESTBOT_MODE == 'live' && '--live' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: investbot/requirements.txt
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Check out bot state
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name "investbot"
+          git config user.email "investbot@users.noreply.github.com"
+          if git fetch --depth=1 origin investbot-state; then
+            git worktree add -B investbot-state _state FETCH_HEAD
+          else
+            git worktree add --detach _state
+            cd _state
+            git checkout --orphan investbot-state
+            git rm -rfq . || true
+            echo "State for the investbot workflow. Edit with care." > README.md
+          fi
+
+      # Never trade if the safety tests fail.
+      - name: Risk-limit tests
+        run: python -m pytest -q
+
+      - name: Kill switch (repo variable INVESTBOT_KILL_SWITCH=on)
+        if: vars.INVESTBOT_KILL_SWITCH == 'on'
+        run: touch "$INVESTBOT_DATA_DIR/KILL_SWITCH"
+
+      - name: Resume after daily-loss halt
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'resume'
+        run: python -m investbot resume
+
+      - name: Backtest (if missing or older than 30 days)
+        if: github.event_name == 'schedule' || inputs.action != 'resume'
+        run: |
+          if [ "${{ inputs.action }}" = "backtest" ]; then
+            python -m investbot backtest
+          else
+            python -m investbot backtest --if-older-than 30
+          fi
+
+      - name: Daily run
+        if: github.event_name == 'schedule' || inputs.action == 'run'
+        run: |
+          python -m investbot run --once-per-day $MODE_FLAG | tee -a "$GITHUB_STEP_SUMMARY"
+          python -m investbot status | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Save bot state
+        if: always()
+        working-directory: ${{ github.workspace }}/_state
+        run: |
+          # KILL_SWITCH created from the repo variable is transient; one committed by hand stays.
+          if [ -f KILL_SWITCH ] && ! git ls-files --error-unmatch KILL_SWITCH >/dev/null 2>&1; then rm KILL_SWITCH; fi
+          git add -A
+          if git diff --cached --quiet; then echo "no state changes"; exit 0; fi
+          git commit -qm "investbot state $(date -u +%Y-%m-%dT%H:%MZ) (${{ github.event_name }})"
+          for i in 1 2 3; do git push origin investbot-state && break; sleep $((i * 5)); done

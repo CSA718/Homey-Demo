@@ -182,3 +182,46 @@ def test_live_flag_refused_by_real_gate(monkeypatch, cfg):
     _fake_backtest(cfg)
     monkeypatch.setenv("ALPACA_LIVE_API_KEY", "lk"); monkeypatch.setenv("ALPACA_LIVE_SECRET_KEY", "ls")
     assert cli.main(["run", "--live"]) == 2  # no paper history
+
+
+# ---- scheduler support ------------------------------------------------------------
+
+def test_data_dir_env_moves_state_and_kill_switch(monkeypatch, tmp_path):
+    from investbot.config import load_config
+    from investbot.risk import RiskManager
+
+    monkeypatch.setenv("INVESTBOT_DATA_DIR", str(tmp_path / "persist"))
+    c = load_config()
+    assert c.state_dir == tmp_path / "persist" / "state"
+    assert c.kill_switch_path == tmp_path / "persist" / "KILL_SWITCH"
+    c.kill_switch_path.parent.mkdir(parents=True)
+    c.kill_switch_path.write_text("x")
+    assert "kill switch" in RiskManager(c).halted_reason()
+
+
+def test_once_per_day_skips_second_run(monkeypatch, cfg):
+    from investbot import cli
+
+    calls = []
+    monkeypatch.setattr(cli, "load_config", lambda p=None: cfg)
+    monkeypatch.setattr(trader, "check_rollout", lambda *a, **k: None)
+    monkeypatch.setattr("investbot.broker.AlpacaBroker", lambda *a, **k: None)
+    monkeypatch.setattr(trader, "run_daily", lambda *a, **k: calls.append(1) or trader.RunResult("no_trades"))
+    monkeypatch.setenv("ALPACA_PAPER_API_KEY", "pk"); monkeypatch.setenv("ALPACA_PAPER_SECRET_KEY", "ps")
+    assert cli.main(["run", "--once-per-day"]) == 0
+    assert cli.main(["run", "--once-per-day"]) == 0
+    assert len(calls) == 1
+    assert cli.main(["run"]) == 0 and len(calls) == 2  # without the flag it always runs
+
+
+def test_market_closed_run_does_not_count_as_done(monkeypatch, cfg):
+    from investbot import cli
+
+    calls = []
+    monkeypatch.setattr(cli, "load_config", lambda p=None: cfg)
+    monkeypatch.setattr(trader, "check_rollout", lambda *a, **k: None)
+    monkeypatch.setattr("investbot.broker.AlpacaBroker", lambda *a, **k: None)
+    monkeypatch.setattr(trader, "run_daily", lambda *a, **k: calls.append(1) or trader.RunResult("market_closed"))
+    monkeypatch.setenv("ALPACA_PAPER_API_KEY", "pk"); monkeypatch.setenv("ALPACA_PAPER_SECRET_KEY", "ps")
+    cli.main(["run", "--once-per-day"]); cli.main(["run", "--once-per-day"])
+    assert len(calls) == 2

@@ -85,6 +85,10 @@ class Config:
     backtest_max_age_days: int = 90
     backtest: dict = field(default_factory=dict)
     root: Path = ROOT
+    # Where state/, logs/, reports/ and the kill switch live. Defaults to `root`;
+    # set INVESTBOT_DATA_DIR to keep them elsewhere (GitHub Actions keeps them on a
+    # separate git branch so they survive between runs).
+    data_root: Path | None = None
 
     # ---- convenience -------------------------------------------------
     @property
@@ -117,21 +121,25 @@ class Config:
         p = Path(rel)
         return p if p.is_absolute() else self.root / p
 
+    def data_path(self, rel: str) -> Path:
+        p = Path(rel)
+        return p if p.is_absolute() else (self.data_root or self.root) / p
+
     @property
     def kill_switch_path(self) -> Path:
-        return self.path(self.risk.kill_switch_file)
+        return self.data_path(self.risk.kill_switch_file)
 
     @property
     def state_dir(self) -> Path:
-        return self.path("state")
+        return self.data_path("state")
 
     @property
     def logs_dir(self) -> Path:
-        return self.path("logs")
+        return self.data_path("logs")
 
     @property
     def reports_dir(self) -> Path:
-        return self.path("reports")
+        return self.data_path("reports")
 
 
 def normalize_symbol(symbol: str) -> str:
@@ -169,6 +177,7 @@ def load_config(path: str | Path | None = None) -> Config:
         backtest_max_age_days=int(raw.get("rollout", {}).get("backtest_max_age_days", 90)),
         backtest=raw.get("backtest", {}),
         root=path.resolve().parent,
+        data_root=Path(os.environ["INVESTBOT_DATA_DIR"]).resolve() if os.environ.get("INVESTBOT_DATA_DIR") else None,
     )
     validate_config(cfg)
     return cfg

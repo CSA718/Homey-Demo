@@ -34,6 +34,13 @@ def _setup_logging(cfg) -> None:
 
 def cmd_backtest(cfg, args) -> int:
     from . import backtest, data
+    from .trader import latest_backtest
+
+    if args.if_older_than is not None:
+        bt = latest_backtest(cfg)
+        if bt and (datetime.now() - bt[1]).days < args.if_older_than:
+            print(f"Backtest from {bt[1]:%Y-%m-%d} is recent enough; skipping. Verdict: {bt[0].get('verdict')}")
+            return 0
 
     start = args.start or cfg.backtest.get("start", "2011-01-01")
     if args.csv:
@@ -62,6 +69,12 @@ def cmd_run(cfg, args) -> int:
 
     live = bool(args.live)
     mode = "LIVE" if live else "PAPER"
+    from .trader import NY
+    today = datetime.now(NY).date().isoformat()
+    marker = cfg.state_dir / f"last_run_{mode.lower()}.txt"
+    if args.once_per_day and marker.exists() and marker.read_text().strip() == today:
+        print(f"{mode}: already ran today ({today}); skipping.")
+        return 0
     alerter = Alerter(cfg.alert_telegram, cfg.alert_email, prefix=f"[investbot {mode}]")
     log = logging.getLogger("investbot")
     log.info("=== daily run (%s) ===", mode)
@@ -80,6 +93,9 @@ def cmd_run(cfg, args) -> int:
         log.exception("run crashed")
         alerter.send(f"ERROR: daily run crashed: {e!r}")
         return 1
+    if res.status != "market_closed":
+        cfg.state_dir.mkdir(parents=True, exist_ok=True)
+        marker.write_text(today)
     print(f"{mode}: {res.status} - {len(res.submitted)} orders, {len(res.blocked)} blocked. {res.detail}")
     return 0
 
@@ -132,8 +148,12 @@ def main(argv: list[str] | None = None) -> int:
     b = sub.add_parser("backtest")
     b.add_argument("--start", default=None)
     b.add_argument("--csv", default=None, help="use your own price CSV instead of yfinance")
+    b.add_argument("--if-older-than", type=int, default=None, metavar="DAYS",
+                   help="only run if the latest report is at least this many days old")
     r = sub.add_parser("run")
     r.add_argument("--live", action="store_true", help="trade real money (requires 30+ days of paper first)")
+    r.add_argument("--once-per-day", action="store_true",
+                   help="skip if a run already completed today (lets a scheduler fire more than once safely)")
     sub.add_parser("status")
     k = sub.add_parser("kill")
     k.add_argument("--reason", default="")

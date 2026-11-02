@@ -15,7 +15,7 @@ from investbot.config import DEFAULT_CONFIG, load_config
 @pytest.fixture
 def cfg(tmp_path):
     """The real config.toml, but with all state/log/kill-switch files under a temp dir."""
-    return dataclasses.replace(load_config(DEFAULT_CONFIG), root=tmp_path)
+    return dataclasses.replace(load_config(DEFAULT_CONFIG), root=tmp_path, data_root=None)
 
 
 def synthetic_prices(cfg, years=8, seed=0, drift=None, start="2015-01-01") -> pd.DataFrame:

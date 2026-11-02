@@ -27,7 +27,7 @@ predictions.** Every rule is a fixed formula you can read in `investbot/strategy
 cd investbot
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-python -m pytest -q                      # 56 tests, including one or more per risk limit
+python -m pytest -q                      # 59 tests, including one or more per risk limit
 
 cp .env.example .env                     # fill in keys; .env is git-ignored
 python -m investbot backtest             # REQUIRED before the bot will trade at all
@@ -147,7 +147,47 @@ The bot never touches positions in the account that aren't in its universe.
     `state/paper_runs.json`).
 * There is no config option that enables live trading. Only the flag does.
 
-## Operations
+## Running it automatically on GitHub Actions (no computer needed)
+
+`.github/workflows/investbot.yml` runs the bot every weekday on GitHub's servers. Each run:
+
+1. Runs the full test suite. **If any risk-limit test fails, it doesn't trade.**
+2. Re-runs the backtest if the latest one is missing or over 30 days old.
+3. Runs `investbot run --once-per-day` (paper unless you opt into live, see below).
+4. Commits the bot's state (paper history, daily-loss halt, last rebalance, `logs/trades.jsonl`,
+   backtest reports) to a separate **`investbot-state`** branch, so nothing is lost between runs
+   and you can read the trade log on GitHub.
+
+GitHub cron is UTC-only and sometimes starts late, so the workflow fires at 14:45 and 15:45 UTC and
+the second firing is a no-op if the first succeeded. That's 10:45 New York time in summer and 9:45 in
+winter.
+
+**One-time setup:**
+
+1. **Get the workflow onto the default branch.** GitHub only runs scheduled workflows from the
+   repo's default branch. Merge this branch there (or change the default branch).
+2. **Add secrets** (repo → Settings → Secrets and variables → Actions → *New repository secret*):
+   `ALPACA_PAPER_API_KEY`, `ALPACA_PAPER_SECRET_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`,
+   `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `ALERT_EMAIL_TO`. Add the
+   `ALPACA_LIVE_*` keys only when you decide to go live.
+3. **Reset the Alpaca paper account to $5,000** (the bot refuses to run on more than $10k).
+4. **First run:** Actions tab → *investbot daily run* → *Run workflow* → `backtest`, then read the
+   report in `reports/` on the `investbot-state` branch.
+
+**Controls (all from the GitHub website or app):**
+
+| To... | Do this |
+|---|---|
+| Stop all trading immediately | Settings → Secrets and variables → Actions → *Variables* → set `INVESTBOT_KILL_SWITCH` = `on`. Delete it (or set it to `off`) to re-enable. Or disable the workflow in the Actions tab. |
+| Clear a daily-loss halt | Actions → *Run workflow* → `resume` |
+| Force a new backtest | Actions → *Run workflow* → `backtest` |
+| Go live (after 30+ days of paper) | Add the `ALPACA_LIVE_*` secrets and set variable `INVESTBOT_MODE` = `live`. The bot's own gate still refuses until paper history, run count and backtest verdict all pass. |
+| See what it did | the `investbot-state` branch (`logs/trades.jsonl`), each run's summary in the Actions tab, and your Telegram/email alerts |
+
+If a run fails (for example, missing keys or the data source down), GitHub emails you about the failed
+workflow and the bot sends an alert where it can.
+
+## Operations (on your own machine)
 
 * **Schedule:** `deploy/crontab.example` (cron) or `deploy/investbot.{service,timer}`
   (systemd) runs `deploy/run_daily.sh` at 10:15 New York time each weekday. That's 45
