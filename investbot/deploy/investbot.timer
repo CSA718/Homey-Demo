@@ -1,0 +1,9 @@
+[Unit]
+Description=Run investbot once per weekday at 10:15 New York time
+
+[Timer]
+OnCalendar=Mon..Fri 10:15 America/New_York
+Persistent=true
+
+[Install]
+WantedBy=timers.target

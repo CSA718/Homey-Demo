@@ -1,0 +1,5 @@
+# Run once per weekday at 10:15 New York time (45 min after the open, after the
+# opening auction noise has settled). `crontab -e` and paste these two lines,
+# fixing the path. CRON_TZ is supported by cronie/Vixie cron on most Linux.
+CRON_TZ=America/New_York
+15 10 * * 1-5  /path/to/investbot/deploy/run_daily.sh
